@@ -4,10 +4,10 @@
 
 :root {
   --bg-base: #14191F;
-  --bg-card: #0d0d0d;
-  --bg-card-hover: #141414;
+  --bg-card: #14191F;
+  --bg-card-hover: #1a2028;
   --bg-border: #1a1a1a;
-  --bg-subtle: #111111;
+  --bg-subtle: #14191F;
   --text-primary: #ffffff;
   --text-secondary: #888888;
   --text-muted: #444444;
