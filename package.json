@@ -3,7 +3,7 @@
   "version": "0.1.6",
   "description": "Monitor en tiempo real para Claude Code",
   "bin": {
-    "tokenrace": "./bin/cli.js"
+    "tokenrace": "bin/cli.js"
   },
   "type": "module",
   "scripts": {
@@ -42,7 +42,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/franciscovaleromartin/tokenrace"
+    "url": "git+https://github.com/franciscovaleromartin/tokenrace.git"
   },
   "homepage": "https://github.com/franciscovaleromartin/tokenrace#readme",
   "bugs": {
