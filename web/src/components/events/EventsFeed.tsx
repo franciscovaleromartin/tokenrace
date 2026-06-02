@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { Pause, Play } from 'lucide-react'
 import { api } from '../../api'
-import type { Event } from '../../types'
+import type { Event, TimeRange } from '../../types'
 
 type EventFilter = 'all' | 'api' | 'tools' | 'prompts' | 'errors'
 
@@ -31,7 +31,7 @@ function matchesFilter(ev: Event, filter: EventFilter): boolean {
   return true
 }
 
-export function EventsFeed({ timeRange: _timeRange }: { timeRange: string }) {
+export function EventsFeed({ timeRange }: { timeRange: TimeRange }) {
   const [events, setEvents] = useState<Event[]>([])
   const [filter, setFilter] = useState<EventFilter>('all')
   const [paused, setPaused] = useState(false)
@@ -39,7 +39,7 @@ export function EventsFeed({ timeRange: _timeRange }: { timeRange: string }) {
 
   useEffect(() => {
     api.events(500).then(setEvents).catch(() => {})
-  }, [])
+  }, [timeRange])
 
   useEffect(() => {
     if (!paused) bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
