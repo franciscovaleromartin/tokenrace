@@ -1,7 +1,7 @@
 /**
  * api.test.js
  *
- * Tests de integración para los endpoints HTTP de tokendash.
+ * Tests de integración para los endpoints HTTP de tokenrace.
  * Usa node:test, node:assert/strict y supertest.
  *
  * El test de SSE usa node:http.get crudo para evitar que supertest

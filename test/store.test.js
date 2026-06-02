@@ -1,9 +1,9 @@
 /**
  * store.test.js
- * Tests para el store de tokendash.
+ * Tests para el store de tokenrace.
  *
  * Nota: reset(), ignoreSession() y labelSession() llaman a scheduleSave() (setTimeout 0)
- * que guarda en ~/.tokendash/data.json. No llamamos startAutoSave() para evitar
+ * que guarda en ~/.tokenrace/data.json. No llamamos startAutoSave() para evitar
  * que el proceso quede vivo tras los tests.
  */
 
@@ -33,7 +33,7 @@ import {
   setDataPathForTesting
 } from '../src/store.js'
 
-// Redirigir persistencia a directorio temporal para no tocar ~/.tokendash/data.json
+// Redirigir persistencia a directorio temporal para no tocar ~/.tokenrace/data.json
 const testDataDir  = join(tmpdir(), `tokenrace-test-${process.pid}`)
 const testDataFile = join(testDataDir, 'data.json')
 mkdirSync(testDataDir, { recursive: true })
