@@ -5,3 +5,5 @@ dist/
 .DS_Store
 docs/.DS_Store
 docs/superpowers/.DS_Store
+tsconfig.tsbuildinfo
+tsconfig.tsbuildinfo
