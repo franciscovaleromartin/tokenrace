@@ -19,6 +19,7 @@
   "devDependencies": {
     "supertest": "^7.0.0"
   },
+  "files": ["bin/", "src/", "dist/"],
   "engines": { "node": ">=18" },
   "keywords": ["claude", "claude-code", "telemetry", "dashboard", "opentelemetry"],
   "license": "MIT"
