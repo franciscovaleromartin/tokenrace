@@ -21,6 +21,9 @@
   },
   "files": ["bin/", "src/", "dist/"],
   "engines": { "node": ">=18" },
-  "keywords": ["claude", "claude-code", "telemetry", "dashboard", "opentelemetry"],
-  "license": "MIT"
+  "keywords": ["claude", "claude-code", "telemetry", "dashboard", "opentelemetry", "otlp", "tokens", "cost"],
+  "license": "MIT",
+  "repository": { "type": "git", "url": "https://github.com/franciscovaleromartin/tokenrace" },
+  "homepage": "https://github.com/franciscovaleromartin/tokenrace#readme",
+  "bugs": { "url": "https://github.com/franciscovaleromartin/tokenrace/issues" }
 }
