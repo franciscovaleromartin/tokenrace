@@ -263,7 +263,44 @@ export function processEvent({ eventName, timestamp, severity, attributes }) {
   }
   state.eventIndex++
 
-  // ── Tool stats ──
+  // ── Asegurar que la sesión existe (puede llegar un evento antes que una métrica) ──
+  if (sessionId && !state.sessions.has(sessionId)) {
+    state.sessions.set(sessionId, {
+      sessionId,
+      project,
+      feature:          attributes.feature ?? null,
+      model,
+      startTime:        timestamp,
+      lastSeen:         timestamp,
+      durationActiveMs: 0,
+      tokensInput:      0,
+      tokensOutput:     0,
+      tokensCache:      0,
+      cost:             0,
+      apiRequests:      0,
+      toolCalls:        0
+    })
+  }
+
+  if (sessionId && state.sessions.has(sessionId)) {
+    const session = state.sessions.get(sessionId)
+    session.lastSeen = Math.max(session.lastSeen, timestamp)
+    if (model && !session.model) session.model = model
+
+    // ── Tiempo activo desde eventos api_request (duration_ms) ──
+    if (eventName === 'api_request') {
+      const dur = Number(attributes['duration_ms'] ?? 0)
+      if (dur > 0) session.durationActiveMs += dur
+      session.apiRequests++
+    }
+
+    // ── Tool stats ──
+    if (eventName === 'tool_use') {
+      session.toolCalls++
+    }
+  }
+
+  // ── Tool stats globales ──
   if (eventName === 'tool_use') {
     const toolName = attributes['tool.name'] ?? attributes.tool ?? 'unknown'
 
@@ -278,11 +315,6 @@ export function processEvent({ eventName, timestamp, severity, attributes }) {
     }
     if (attributes['tool.duration_ms'] !== undefined) {
       tool.totalDurationMs += Number(attributes['tool.duration_ms'])
-    }
-
-    // Incrementar toolCalls en la sesión
-    if (sessionId && state.sessions.has(sessionId)) {
-      state.sessions.get(sessionId).toolCalls++
     }
   }
 

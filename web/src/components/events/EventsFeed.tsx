@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { Pause, Play } from 'lucide-react'
 import { api } from '../../api'
 import type { Event, TimeRange } from '../../types'
@@ -35,17 +35,12 @@ export function EventsFeed({ timeRange, sseVersion }: { timeRange: TimeRange; ss
   const [events, setEvents] = useState<Event[]>([])
   const [filter, setFilter] = useState<EventFilter>('all')
   const [paused, setPaused] = useState(false)
-  const bottomRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     api.events(500).then(setEvents).catch(() => {})
   }, [timeRange, sseVersion])
 
-  useEffect(() => {
-    if (!paused) bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [events, paused])
-
-  const filtered = events.filter(ev => matchesFilter(ev, filter)).reverse()
+  const filtered = events.filter(ev => matchesFilter(ev, filter))
 
   return (
     <div className="bg-bg-card border border-bg-border rounded-lg flex flex-col h-[600px]">
@@ -88,7 +83,6 @@ export function EventsFeed({ timeRange, sseVersion }: { timeRange: TimeRange; ss
             </div>
           ))
         }
-        <div ref={bottomRef} />
       </div>
     </div>
   )
