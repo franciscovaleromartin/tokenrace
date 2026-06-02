@@ -1,10 +1,17 @@
 #!/usr/bin/env node
 import { startServer } from '../src/server.js'
+import { ensureEnvVars } from '../src/ensure-env-vars.js'
 import open from 'open'
 
 const PORT = process.env.TOKENRACE_PORT ? Number(process.env.TOKENRACE_PORT) : 1337
 
+const { added, rcPath } = ensureEnvVars(PORT)
+
 const { server } = await startServer({ port: PORT })
+
+const envStatus = added
+  ? `  ✓ Variables OTLP añadidas a ${rcPath}\n  ⚠ Abre una nueva terminal y ejecuta: claude`
+  : `  ✓ Variables OTLP ya presentes en ${rcPath}`
 
 console.log(`
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -13,19 +20,7 @@ console.log(`
 
   Dashboard  →  http://localhost:${PORT}
 
-  Activa la telemetría en Claude Code:
-
-  export CLAUDE_CODE_ENABLE_TELEMETRY=1
-  export OTEL_METRICS_EXPORTER=otlp
-  export OTEL_LOGS_EXPORTER=otlp
-  export OTEL_EXPORTER_OTLP_PROTOCOL=http/json
-  export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:${PORT}
-  export OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE=cumulative
-
-  Etiqueta tu sesión (opcional — puedes hacerlo desde la web):
-  export OTEL_RESOURCE_ATTRIBUTES="project=mi-proyecto"
-
-  Luego: claude
+${envStatus}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 `)
