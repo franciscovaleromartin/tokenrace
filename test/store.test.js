@@ -7,8 +7,11 @@
  * que el proceso quede vivo tras los tests.
  */
 
-import { test, beforeEach } from 'node:test'
+import { test, beforeEach, after } from 'node:test'
 import assert from 'node:assert/strict'
+import { tmpdir } from 'node:os'
+import { mkdirSync, rmSync } from 'node:fs'
+import { join } from 'node:path'
 import {
   processMetric,
   processEvent,
@@ -26,12 +29,23 @@ import {
   getEvents,
   getTools,
   getAgents,
-  getModels
+  getModels,
+  setDataPathForTesting
 } from '../src/store.js'
+
+// Redirigir persistencia a directorio temporal para no tocar ~/.tokendash/data.json
+const testDataDir  = join(tmpdir(), `tokendash-test-${process.pid}`)
+const testDataFile = join(testDataDir, 'data.json')
+mkdirSync(testDataDir, { recursive: true })
+setDataPathForTesting(testDataFile)
 
 // Resetear el estado antes de cada test para aislamiento
 beforeEach(() => {
   reset()
+})
+
+after(() => {
+  rmSync(testDataDir, { recursive: true, force: true })
 })
 
 // ─── getStatus ────────────────────────────────────────────────────────────────
@@ -337,4 +351,30 @@ test('reset: limpia todo el state', () => {
   assert.equal(sessions.length,     0)
   assert.equal(events.length,       0)
   assert.equal(summary.tokens.input, 0)
+})
+
+// ─── ignoreSession filtra getters ─────────────────────────────────────────────
+
+test('getSummary: excluye sesiones ignoradas con datos históricos', () => {
+  const ts = Date.now()
+  // Primero procesar métricas para que la sesión exista con datos
+  processMetric({ name: 'claude_code.tokens.input',  value: 1000, timestamp: ts,     labels: { 'session.id': 'sess-ign-sum' } })
+  processMetric({ name: 'claude_code.tokens.output', value: 500,  timestamp: ts + 1, labels: { 'session.id': 'sess-ign-sum' } })
+  // Luego ignorar la sesión
+  ignoreSession('sess-ign-sum')
+  // getSummary debe devolver 0 tokens
+  const summary = getSummary('all')
+  assert.equal(summary.tokens.input,  0)
+  assert.equal(summary.tokens.output, 0)
+  assert.equal(summary.sessions,      0)
+})
+
+test('getStatus: sessionCount excluye sesiones ignoradas', () => {
+  const ts = Date.now()
+  processMetric({ name: 'claude_code.tokens.input', value: 100, timestamp: ts,     labels: { 'session.id': 'sess-a' } })
+  processMetric({ name: 'claude_code.tokens.input', value: 100, timestamp: ts + 1, labels: { 'session.id': 'sess-b' } })
+  assert.equal(getStatus().sessionCount, 2)
+
+  ignoreSession('sess-a')
+  assert.equal(getStatus().sessionCount, 1)
 })

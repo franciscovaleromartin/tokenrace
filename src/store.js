@@ -15,8 +15,15 @@ import path from 'node:path'
 
 // ─── Ruta de persistencia ───────────────────────────────────────────────────
 
-const DATA_DIR = path.join(os.homedir(), '.tokendash')
-const DATA_FILE = path.join(DATA_DIR, 'data.json')
+const HOME_DATA_DIR = path.join(os.homedir(), '.tokendash')
+let dataDir  = HOME_DATA_DIR
+let dataFile = path.join(HOME_DATA_DIR, 'data.json')
+
+// Solo para tests — redirige la ruta de datos a un directorio temporal
+export function setDataPathForTesting(newPath) {
+  dataFile = newPath
+  dataDir  = path.dirname(newPath)
+}
 
 // ─── Estado en memoria ───────────────────────────────────────────────────────
 
@@ -46,6 +53,8 @@ function resolveProject(sessionId, resourceProject) {
   return state.sessionMappings.get(sessionId) ?? resourceProject ?? null
 }
 
+const TIME_MULTIPLIERS = { d: 86_400_000, h: 3_600_000, m: 60_000 }
+
 /**
  * Parsea un rango temporal "now-Xd", "now-Xh", "now-Xm", "all" o falsy.
  * Devuelve el timestamp mínimo (ms) a incluir.
@@ -56,8 +65,7 @@ function parseTimeRange(from) {
   const match = /^now-(\d+)([dhm])$/.exec(from)
   if (!match) return 0
 
-  const multipliers = { d: 86_400_000, h: 3_600_000, m: 60_000 }
-  return Date.now() - Number(match[1]) * multipliers[match[2]]
+  return Date.now() - Number(match[1]) * TIME_MULTIPLIERS[match[2]]
 }
 
 /**
@@ -68,8 +76,7 @@ function parseBucket(bucket) {
   if (!bucket) return 3_600_000
   const match = /^(\d+)([dhm])$/.exec(bucket)
   if (!match) return 3_600_000
-  const multipliers = { d: 86_400_000, h: 3_600_000, m: 60_000 }
-  return Number(match[1]) * multipliers[match[2]]
+  return Number(match[1]) * TIME_MULTIPLIERS[match[2]]
 }
 
 /**
@@ -85,17 +92,12 @@ function rebuildProjectAggregates() {
 
     if (!state.projects.has(project)) {
       state.projects.set(project, {
-        cost: 0, tokensInput: 0, tokensOutput: 0, tokensCache: 0,
         sessions: new Set(),
         commits: 0, linesAdded: 0, linesRemoved: 0
       })
     }
     const proj = state.projects.get(project)
     proj.sessions.add(session.sessionId)
-    proj.cost        += session.cost
-    proj.tokensInput += session.tokensInput
-    proj.tokensOutput += session.tokensOutput
-    proj.tokensCache  += session.tokensCache
   }
 
   // Reconstruir commits y líneas desde timeseries
@@ -115,7 +117,6 @@ function rebuildProjectAggregates() {
       if (!project) continue
       if (!state.projects.has(project)) {
         state.projects.set(project, {
-          cost: 0, tokensInput: 0, tokensOutput: 0, tokensCache: 0,
           sessions: new Set(),
           commits: 0, linesAdded: 0, linesRemoved: 0
         })
@@ -194,7 +195,6 @@ export function processMetric({ name, value, timestamp, labels }) {
   if (project) {
     if (!state.projects.has(project)) {
       state.projects.set(project, {
-        cost: 0, tokensInput: 0, tokensOutput: 0, tokensCache: 0,
         sessions: new Set(),
         commits: 0, linesAdded: 0, linesRemoved: 0
       })
@@ -203,15 +203,6 @@ export function processMetric({ name, value, timestamp, labels }) {
     if (sessionId) proj.sessions.add(sessionId)
 
     switch (name) {
-      case 'claude_code.tokens.input':
-        proj.tokensInput += value; break
-      case 'claude_code.tokens.output':
-        proj.tokensOutput += value; break
-      case 'claude_code.tokens.cache.read':
-      case 'claude_code.tokens.cache.creation':
-        proj.tokensCache += value; break
-      case 'claude_code.cost':
-        proj.cost += value; break
       case 'claude_code.commits':
         proj.commits += value; break
       case 'claude_code.lines_added':
@@ -393,7 +384,8 @@ export function getStatus() {
   return {
     connected:    state.lastSeen !== null,
     lastSeen:     state.lastSeen,
-    sessionCount: state.sessions.size,
+    sessionCount: Array.from(state.sessions.keys())
+      .filter(id => !state.ignoredSessions.has(id)).length,
     totalEvents:  state.totalEvents,
     uptime:       Date.now() - state.startTime
   }
@@ -414,6 +406,7 @@ export function getSummary(from) {
   const sessionSet  = new Set()
 
   for (const session of state.sessions.values()) {
+    if (state.ignoredSessions.has(session.sessionId)) continue
     if (session.lastSeen < minTs) continue
     tokensInput  += session.tokensInput
     tokensOutput += session.tokensOutput
@@ -544,6 +537,7 @@ export function getProjects(from) {
  */
 export function getSessions({ limit = 50, project = null } = {}) {
   let sessions = Array.from(state.sessions.values())
+    .filter(s => !state.ignoredSessions.has(s.sessionId))
 
   if (project) {
     sessions = sessions.filter(s => resolveProject(s.sessionId, s.project) === project)
@@ -635,10 +629,9 @@ export function getTools(from) {
 }
 
 /**
- * Lista de agentes, opcionalmente filtrada por sesión.
- * @param {string|null} sessionId
+ * Lista de agentes registrados.
  */
-export function getAgents(sessionId) {
+export function getAgents() {
   return Array.from(state.agents.values())
 }
 
@@ -668,7 +661,7 @@ export function getModels(from) {
  */
 export function saveSync() {
   try {
-    fs.mkdirSync(DATA_DIR, { recursive: true })
+    fs.mkdirSync(dataDir, { recursive: true })
 
     const data = {
       timeseries:      Array.from(state.timeseries.entries()),
@@ -681,7 +674,7 @@ export function saveSync() {
       startTime:       state.startTime
     }
 
-    fs.writeFileSync(DATA_FILE, JSON.stringify(data))
+    fs.writeFileSync(dataFile, JSON.stringify(data))
   } catch (err) {
     console.error('[store] Error guardando datos en disco:', err.message)
   }
@@ -693,7 +686,7 @@ export function saveSync() {
  */
 export function loadFromDisk() {
   try {
-    const raw  = fs.readFileSync(DATA_FILE, 'utf8')
+    const raw  = fs.readFileSync(dataFile, 'utf8')
     const data = JSON.parse(raw)
 
     // Restaurar timeseries (Map de arrays)
