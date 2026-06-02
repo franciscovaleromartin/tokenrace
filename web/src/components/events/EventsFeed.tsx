@@ -45,7 +45,7 @@ export function EventsFeed({ timeRange, sseVersion }: { timeRange: TimeRange; ss
     if (!paused) bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [events, paused])
 
-  const filtered = events.filter(ev => matchesFilter(ev, filter))
+  const filtered = events.filter(ev => matchesFilter(ev, filter)).reverse()
 
   return (
     <div className="bg-bg-card border border-bg-border rounded-lg flex flex-col h-[600px]">

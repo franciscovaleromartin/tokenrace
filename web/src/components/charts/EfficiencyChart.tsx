@@ -3,7 +3,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ReferenceLine, R
 import { api } from '../../api'
 import type { TimeRange, TimeseriesPoint } from '../../types'
 
-export function EfficiencyChart({ timeRange }: { timeRange: TimeRange }) {
+export function EfficiencyChart({ timeRange, sseVersion }: { timeRange: TimeRange; sseVersion: number }) {
   const [inputData, setInputData]   = useState<TimeseriesPoint[]>([])
   const [outputData, setOutputData] = useState<TimeseriesPoint[]>([])
 
@@ -13,7 +13,7 @@ export function EfficiencyChart({ timeRange }: { timeRange: TimeRange }) {
       api.timeseries('claude_code.tokens.input',  timeRange, bucket),
       api.timeseries('claude_code.tokens.output', timeRange, bucket),
     ]).then(([input, output]) => { setInputData(input); setOutputData(output) }).catch(() => {})
-  }, [timeRange])
+  }, [timeRange, sseVersion])
 
   const tsSet    = new Set([...inputData.map(p => p.timestamp), ...outputData.map(p => p.timestamp)])
   const inputMap  = new Map(inputData.map(p  => [p.timestamp, p.value]))

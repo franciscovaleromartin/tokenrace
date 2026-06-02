@@ -30,11 +30,11 @@ export function useMetrics(timeRange: TimeRange) {
     fetchData()
   }, [fetchData])
 
-  // Al llegar un evento SSE: incrementar sseVersion (para tablas) +
-  // refrescar summary si los datos tienen más de 30s
+  // Al llegar un evento SSE: incrementar sseVersion (para tablas/charts) +
+  // refrescar summary si los datos tienen más de 5s
   const handleSSE = useCallback((_type: string, _payload: unknown) => {
     setSseVersion(v => v + 1)
-    if (Date.now() - lastFetchRef.current > 30_000) {
+    if (Date.now() - lastFetchRef.current > 5_000) {
       fetchData()
     } else {
       api.status().then(setStatus).catch(() => {})

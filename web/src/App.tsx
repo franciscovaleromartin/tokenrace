@@ -66,8 +66,8 @@ export default function App() {
           <div className="flex flex-col gap-4">
             {summary && <StatsRow summary={summary} />}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              <TokensChart timeRange={timeRange} />
-              <CostChart timeRange={timeRange} />
+              <TokensChart timeRange={timeRange} sseVersion={sseVersion} />
+              <CostChart timeRange={timeRange} sseVersion={sseVersion} />
             </div>
           </div>
         )}
@@ -101,8 +101,8 @@ export default function App() {
               </div>
             )}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              <CacheChart timeRange={timeRange} />
-              <EfficiencyChart timeRange={timeRange} />
+              <CacheChart timeRange={timeRange} sseVersion={sseVersion} />
+              <EfficiencyChart timeRange={timeRange} sseVersion={sseVersion} />
             </div>
           </div>
         )}

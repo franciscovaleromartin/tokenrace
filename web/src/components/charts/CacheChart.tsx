@@ -3,7 +3,7 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsi
 import { api } from '../../api'
 import type { TimeRange, TimeseriesPoint } from '../../types'
 
-export function CacheChart({ timeRange }: { timeRange: TimeRange }) {
+export function CacheChart({ timeRange, sseVersion }: { timeRange: TimeRange; sseVersion: number }) {
   const [readData, setReadData]     = useState<TimeseriesPoint[]>([])
   const [createData, setCreateData] = useState<TimeseriesPoint[]>([])
 
@@ -13,7 +13,7 @@ export function CacheChart({ timeRange }: { timeRange: TimeRange }) {
       api.timeseries('claude_code.tokens.cache.read',     timeRange, bucket),
       api.timeseries('claude_code.tokens.cache.creation', timeRange, bucket),
     ]).then(([read, create]) => { setReadData(read); setCreateData(create) }).catch(() => {})
-  }, [timeRange])
+  }, [timeRange, sseVersion])
 
   const tsSet = new Set([...readData.map(p => p.timestamp), ...createData.map(p => p.timestamp)])
   const readMap   = new Map(readData.map(p   => [p.timestamp, p.value]))

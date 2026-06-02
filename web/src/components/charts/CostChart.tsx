@@ -8,20 +8,21 @@ import type { TimeRange, TimeseriesPoint } from '../../types'
 
 interface CostChartProps {
   timeRange: TimeRange
+  sseVersion: number
 }
 
 function formatDay(ts: number): string {
   return new Date(ts).toLocaleDateString('es', { day: 'numeric', month: 'short' })
 }
 
-export function CostChart({ timeRange }: CostChartProps) {
+export function CostChart({ timeRange, sseVersion }: CostChartProps) {
   const [data, setData] = useState<TimeseriesPoint[]>([])
 
   useEffect(() => {
     api.timeseries('claude_code.cost', timeRange, '1d')
       .then(setData)
       .catch(() => {})
-  }, [timeRange])
+  }, [timeRange, sseVersion])
 
   const chartData = data.map(p => ({
     label: formatDay(p.timestamp),

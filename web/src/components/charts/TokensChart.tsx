@@ -8,6 +8,7 @@ import type { TimeRange, TimeseriesPoint } from '../../types'
 
 interface TokensChartProps {
   timeRange: TimeRange
+  sseVersion: number
 }
 
 function formatLabel(ts: number): string {
@@ -15,7 +16,7 @@ function formatLabel(ts: number): string {
   return d.toLocaleString('es', { hour: '2-digit', minute: '2-digit', day: 'numeric', month: 'short' })
 }
 
-export function TokensChart({ timeRange }: TokensChartProps) {
+export function TokensChart({ timeRange, sseVersion }: TokensChartProps) {
   const [inputData, setInputData]   = useState<TimeseriesPoint[]>([])
   const [outputData, setOutputData] = useState<TimeseriesPoint[]>([])
 
@@ -28,7 +29,7 @@ export function TokensChart({ timeRange }: TokensChartProps) {
       setInputData(input)
       setOutputData(output)
     }).catch(() => {})
-  }, [timeRange])
+  }, [timeRange, sseVersion])
 
   // Combinar timestamps
   const tsSet = new Set([
