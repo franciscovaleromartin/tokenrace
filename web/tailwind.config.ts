@@ -6,10 +6,10 @@ export default {
     extend: {
       colors: {
         'bg-base':       '#14191F',
-        'bg-card':       '#14191F',
-        'bg-card-hover': '#1a2028',
+        'bg-card':       '#21262B',
+        'bg-card-hover': '#272d33',
         'bg-border':     '#1a1a1a',
-        'bg-subtle':     '#14191F',
+        'bg-subtle':     '#21262B',
         'text-primary':  '#ffffff',
         'text-secondary':'#888888',
         'text-muted':    '#444444',
