@@ -2,13 +2,13 @@
 import { startServer } from '../src/server.js'
 import open from 'open'
 
-const PORT = process.env.TOKENDASH_PORT ? Number(process.env.TOKENDASH_PORT) : 1337
+const PORT = process.env.TOKENRACE_PORT ? Number(process.env.TOKENRACE_PORT) : 1337
 
 const { server } = await startServer({ port: PORT })
 
 console.log(`
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  tokendash — monitor de Claude Code
+  tokenrace — monitor de Claude Code
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
   Dashboard  →  http://localhost:${PORT}

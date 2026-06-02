@@ -34,7 +34,7 @@ import {
 } from '../src/store.js'
 
 // Redirigir persistencia a directorio temporal para no tocar ~/.tokendash/data.json
-const testDataDir  = join(tmpdir(), `tokendash-test-${process.pid}`)
+const testDataDir  = join(tmpdir(), `tokenrace-test-${process.pid}`)
 const testDataFile = join(testDataDir, 'data.json')
 mkdirSync(testDataDir, { recursive: true })
 setDataPathForTesting(testDataFile)

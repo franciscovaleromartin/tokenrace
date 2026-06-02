@@ -25,7 +25,7 @@ export function SetupGuide() {
         <div className="text-center space-y-2">
           <div className="text-4xl font-mono font-bold">
             <span className="text-accent-green">&lt;/&gt;</span>
-            <span className="text-text-primary"> tokendash</span>
+            <span className="text-text-primary"> tokenrace</span>
           </div>
           <div className="flex items-center justify-center gap-2 text-text-secondary">
             <span className="inline-block w-2 h-2 rounded-full bg-accent-yellow animate-pulse" />

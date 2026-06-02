@@ -1,8 +1,8 @@
 {
-  "name": "tokendash",
+  "name": "tokenrace",
   "version": "0.1.0",
   "description": "Monitor en tiempo real para Claude Code",
-  "bin": { "tokendash": "./bin/cli.js" },
+  "bin": { "tokenrace": "./bin/cli.js" },
   "type": "module",
   "scripts": {
     "start": "node bin/cli.js",

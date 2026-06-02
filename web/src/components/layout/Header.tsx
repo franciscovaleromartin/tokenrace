@@ -31,7 +31,7 @@ export function Header({ timeRange, onTimeRangeChange, connected, lastSeen, onRe
       {/* Logo */}
       <div className="flex items-center gap-2 text-sm font-mono font-semibold text-text-primary">
         <span className="text-accent-green">&lt;/&gt;</span>
-        <span>tokendash</span>
+        <span>tokenrace</span>
       </div>
 
       {/* Live indicator */}

@@ -2,7 +2,7 @@
  * store.js
  *
  * Estado en memoria del servidor, getters para la API REST,
- * y persistencia en ~/.tokendash/data.json.
+ * y persistencia en ~/.tokenrace/data.json.
  *
  * Reglas:
  * - Nunca lanzar excepción — si falla escribir a disco, loguearlo y continuar.
@@ -15,7 +15,7 @@ import path from 'node:path'
 
 // ─── Ruta de persistencia ───────────────────────────────────────────────────
 
-const HOME_DATA_DIR = path.join(os.homedir(), '.tokendash')
+const HOME_DATA_DIR = path.join(os.homedir(), '.tokenrace')
 let dataDir  = HOME_DATA_DIR
 let dataFile = path.join(HOME_DATA_DIR, 'data.json')
 

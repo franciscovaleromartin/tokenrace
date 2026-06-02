@@ -40,7 +40,7 @@ function getFreePort() {
 
 before(async () => {
   // Redirigir datos a directorio temporal ANTES de arrancar el servidor
-  const testDataDir = join(tmpdir(), `tokendash-test-${Date.now()}`)
+  const testDataDir = join(tmpdir(), `tokenrace-test-${Date.now()}`)
   mkdirSync(testDataDir, { recursive: true })
   setDataPathForTesting(join(testDataDir, 'data.json'))
 
