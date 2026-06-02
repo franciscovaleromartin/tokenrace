@@ -14,7 +14,7 @@ import {
   getStatus, getSummary, getTimeseries, getProjects,
   getSessions, getUnlabeledSessions, getSessionEvents,
   getEvents, getTools, getAgents, getModels,
-  labelSession, reset
+  labelSession, ignoreSession, reset
 } from './store.js'
 
 // ─── Clientes SSE activos ────────────────────────────────────────────────────
@@ -157,6 +157,15 @@ export function createRouter() {
     }
     labelSession(req.params.sessionId, project)
     broadcast('label_updated', { sessionId: req.params.sessionId, project })
+    res.json({ ok: true })
+  })
+
+  /**
+   * POST /api/sessions/:sessionId/ignore
+   * Marca una sesión como ignorada (no aparecerá en notificaciones ni en métricas).
+   */
+  router.post('/api/sessions/:sessionId/ignore', (req, res) => {
+    ignoreSession(req.params.sessionId)
     res.json({ ok: true })
   })
 

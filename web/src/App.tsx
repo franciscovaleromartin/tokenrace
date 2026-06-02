@@ -1,6 +1,8 @@
 import { useState, useCallback } from 'react'
 import { Header } from './components/layout/Header'
 import { TabBar } from './components/layout/TabBar'
+import { SetupGuide } from './components/setup/SetupGuide'
+import { SessionLabelNotification } from './components/notifications/SessionLabelNotification'
 import { StatsRow } from './components/stats/StatsRow'
 import { TokensChart } from './components/charts/TokensChart'
 import { CostChart } from './components/charts/CostChart'
@@ -27,6 +29,22 @@ export default function App() {
     refetch()
   }, [refetch])
 
+  // Si nunca han llegado datos, mostrar SetupGuide
+  if (!status.connected && status.totalEvents === 0) {
+    return (
+      <div className="min-h-screen bg-bg-base text-text-primary flex flex-col">
+        <Header
+          timeRange={timeRange}
+          onTimeRangeChange={setTimeRange}
+          connected={false}
+          lastSeen={null}
+          onReset={handleReset}
+        />
+        <SetupGuide />
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-bg-base text-text-primary flex flex-col">
       <Header
@@ -36,6 +54,10 @@ export default function App() {
         lastSeen={status.lastSeen}
         onReset={handleReset}
       />
+
+      {/* Zona de notificaciones — solo aparece si hay sesiones sin etiquetar */}
+      <SessionLabelNotification onLabeled={refetch} />
+
       <TabBar activeTab={activeTab} onTabChange={setActiveTab} />
 
       <main className="flex-1 p-4 max-w-screen-2xl mx-auto w-full">
@@ -51,14 +73,10 @@ export default function App() {
         )}
 
         {activeTab === 'sessions' && <SessionsTable timeRange={timeRange} />}
-
         {activeTab === 'projects' && <ProjectsTable timeRange={timeRange} />}
-
-        {activeTab === 'tools' && <ToolsTable timeRange={timeRange} />}
-
-        {activeTab === 'agents' && <AgentsTree />}
-
-        {activeTab === 'events' && <EventsFeed timeRange={timeRange} />}
+        {activeTab === 'tools'    && <ToolsTable timeRange={timeRange} />}
+        {activeTab === 'agents'   && <AgentsTree />}
+        {activeTab === 'events'   && <EventsFeed timeRange={timeRange} />}
 
         {activeTab === 'costs' && (
           <div className="flex flex-col gap-4">
