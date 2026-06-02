@@ -5,14 +5,15 @@ import type { Project, TimeRange } from '../../types'
 
 interface ProjectsTableProps {
   timeRange: TimeRange
+  sseVersion: number
 }
 
-export function ProjectsTable({ timeRange }: ProjectsTableProps) {
+export function ProjectsTable({ timeRange, sseVersion }: ProjectsTableProps) {
   const [projects, setProjects] = useState<Project[]>([])
 
   useEffect(() => {
     api.projects(timeRange).then(setProjects).catch(() => {})
-  }, [timeRange])
+  }, [timeRange, sseVersion])
 
   if (projects.length === 0) {
     return <div className="text-text-muted text-sm p-4">Sin proyectos registrados</div>

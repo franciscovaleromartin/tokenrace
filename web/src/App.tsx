@@ -22,7 +22,7 @@ import type { TabId } from './types'
 export default function App() {
   const [activeTab, setActiveTab] = useState<TabId>('overview')
   const { timeRange, setTimeRange } = useTimeRange()
-  const { status, summary, refetch } = useMetrics(timeRange)
+  const { status, summary, refetch, sseVersion } = useMetrics(timeRange)
 
   const handleReset = useCallback(async () => {
     await api.reset()
@@ -72,11 +72,11 @@ export default function App() {
           </div>
         )}
 
-        {activeTab === 'sessions' && <SessionsTable timeRange={timeRange} />}
-        {activeTab === 'projects' && <ProjectsTable timeRange={timeRange} />}
-        {activeTab === 'tools'    && <ToolsTable timeRange={timeRange} />}
-        {activeTab === 'agents'   && <AgentsTree />}
-        {activeTab === 'events'   && <EventsFeed timeRange={timeRange} />}
+        {activeTab === 'sessions' && <SessionsTable timeRange={timeRange} sseVersion={sseVersion} />}
+        {activeTab === 'projects' && <ProjectsTable timeRange={timeRange} sseVersion={sseVersion} />}
+        {activeTab === 'tools'    && <ToolsTable timeRange={timeRange} sseVersion={sseVersion} />}
+        {activeTab === 'agents'   && <AgentsTree sseVersion={sseVersion} />}
+        {activeTab === 'events'   && <EventsFeed timeRange={timeRange} sseVersion={sseVersion} />}
 
         {activeTab === 'costs' && (
           <div className="flex flex-col gap-4">

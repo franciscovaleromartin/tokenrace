@@ -31,7 +31,7 @@ function matchesFilter(ev: Event, filter: EventFilter): boolean {
   return true
 }
 
-export function EventsFeed({ timeRange }: { timeRange: TimeRange }) {
+export function EventsFeed({ timeRange, sseVersion }: { timeRange: TimeRange; sseVersion: number }) {
   const [events, setEvents] = useState<Event[]>([])
   const [filter, setFilter] = useState<EventFilter>('all')
   const [paused, setPaused] = useState(false)
@@ -39,7 +39,7 @@ export function EventsFeed({ timeRange }: { timeRange: TimeRange }) {
 
   useEffect(() => {
     api.events(500).then(setEvents).catch(() => {})
-  }, [timeRange])
+  }, [timeRange, sseVersion])
 
   useEffect(() => {
     if (!paused) bottomRef.current?.scrollIntoView({ behavior: 'smooth' })

@@ -4,14 +4,15 @@ import type { ToolsData, TimeRange } from '../../types'
 
 interface ToolsTableProps {
   timeRange: TimeRange
+  sseVersion: number
 }
 
-export function ToolsTable({ timeRange }: ToolsTableProps) {
+export function ToolsTable({ timeRange, sseVersion }: ToolsTableProps) {
   const [data, setData] = useState<ToolsData | null>(null)
 
   useEffect(() => {
     api.tools(timeRange).then(setData).catch(() => {})
-  }, [timeRange])
+  }, [timeRange, sseVersion])
 
   if (!data || data.usage.length === 0) {
     return <div className="text-text-muted text-sm p-4">Sin datos de herramientas</div>

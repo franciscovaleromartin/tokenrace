@@ -6,9 +6,10 @@ import type { Session, Event, TimeRange } from '../../types'
 
 interface SessionsTableProps {
   timeRange: TimeRange
+  sseVersion: number
 }
 
-export function SessionsTable({ timeRange }: SessionsTableProps) {
+export function SessionsTable({ timeRange, sseVersion }: SessionsTableProps) {
   const [sessions, setSessions] = useState<Session[]>([])
   const [expanded, setExpanded] = useState<string | null>(null)
   const [sessionEvents, setSessionEvents] = useState<Event[]>([])
@@ -17,7 +18,7 @@ export function SessionsTable({ timeRange }: SessionsTableProps) {
 
   useEffect(() => {
     api.sessions(50).then(setSessions).catch(() => {})
-  }, [timeRange])
+  }, [timeRange, sseVersion])
 
   function toggleExpand(sessionId: string) {
     if (expanded === sessionId) {

@@ -3,12 +3,12 @@ import { api } from '../../api'
 import { formatCost, formatNumber, formatDuration } from '../../utils/format'
 import type { Agent } from '../../types'
 
-export function AgentsTree() {
+export function AgentsTree({ sseVersion }: { sseVersion: number }) {
   const [agents, setAgents] = useState<Agent[]>([])
 
   useEffect(() => {
     api.agents().then(setAgents).catch(() => {})
-  }, [])
+  }, [sseVersion])
 
   if (agents.length === 0) {
     return (
