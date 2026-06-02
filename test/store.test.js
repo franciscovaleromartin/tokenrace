@@ -143,6 +143,29 @@ test('processMetric: ignora sesiones en ignoredSessions', () => {
   assert.equal(sessions.length, 0)
 })
 
+test('processMetric: normaliza claude_code.token.usage a tokens.input (delta acumulativo)', () => {
+  const ts = Date.now()
+  const labels = { 'session.id': 'sess-new', type: 'input', model: 'claude-haiku', query_source: 'main', project: 'p' }
+  // Primer punto: cumulativo = 479 → delta = 479
+  processMetric({ name: 'claude_code.token.usage', value: 479, timestamp: ts, labels })
+  // Segundo punto: mismo acumulativo → delta = 0 (no nuevos tokens)
+  processMetric({ name: 'claude_code.token.usage', value: 479, timestamp: ts + 1, labels })
+  // Tercer punto: cumulativo crece → delta = 210
+  processMetric({ name: 'claude_code.token.usage', value: 689, timestamp: ts + 2, labels })
+  const sessions = getSessions()
+  assert.equal(sessions[0].tokensInput, 689) // 479 + 0 + 210
+})
+
+test('processMetric: normaliza claude_code.cost.usage a cost (delta acumulativo)', () => {
+  const ts = Date.now()
+  const labels = { 'session.id': 'sess-cost-new', model: 'claude-haiku', query_source: 'main', project: 'p' }
+  processMetric({ name: 'claude_code.cost.usage', value: 0.001, timestamp: ts, labels })
+  processMetric({ name: 'claude_code.cost.usage', value: 0.001, timestamp: ts + 1, labels })
+  processMetric({ name: 'claude_code.cost.usage', value: 0.003, timestamp: ts + 2, labels })
+  const sessions = getSessions()
+  assert.ok(Math.abs(sessions[0].cost - 0.003) < 1e-9) // 0.001 + 0 + 0.002
+})
+
 // ─── processEvent ─────────────────────────────────────────────────────────────
 
 test('processEvent: añade evento al buffer', () => {

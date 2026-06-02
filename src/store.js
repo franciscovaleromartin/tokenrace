@@ -28,22 +28,89 @@ export function setDataPathForTesting(newPath) {
 // ─── Estado en memoria ───────────────────────────────────────────────────────
 
 const state = {
-  timeseries:      new Map(),  // metricName → [{ ts, value, labels }]
-  sessions:        new Map(),  // sessionId  → SessionData
-  sessionMappings: new Map(),  // sessionId  → projectName
-  ignoredSessions: new Set(),  // sessionIds ignorados
-  events:          [],         // buffer circular, max 1000
-  eventIndex:      0,
-  projects:        new Map(),  // projectName → ProjectAggregates
-  tools:           new Map(),  // toolName    → ToolStats
-  agents:          new Map(),  // agentId     → AgentData
-  models:          new Map(),  // modelName   → ModelStats
-  lastSeen:        null,
-  startTime:       Date.now(),
-  totalEvents:     0
+  timeseries:       new Map(),  // metricName → [{ ts, value, labels }]
+  sessions:         new Map(),  // sessionId  → SessionData
+  sessionMappings:  new Map(),  // sessionId  → projectName
+  ignoredSessions:  new Set(),  // sessionIds ignorados
+  events:           [],         // buffer circular, max 1000
+  eventIndex:       0,
+  projects:         new Map(),  // projectName → ProjectAggregates
+  tools:            new Map(),  // toolName    → ToolStats
+  agents:           new Map(),  // agentId     → AgentData
+  models:           new Map(),  // modelName   → ModelStats
+  cumulativeValues: new Map(),  // clave → último valor acumulativo (no persiste)
+  lastSeen:         null,
+  startTime:        Date.now(),
+  totalEvents:      0
 }
 
 // ─── Helpers internos ────────────────────────────────────────────────────────
+
+/**
+ * Convierte un valor acumulativo en un delta desde la última lectura.
+ * Se usa para métricas que Claude Code exporta con temporalidad cumulativa.
+ */
+function cumulativeDelta(key, newValue) {
+  const last = state.cumulativeValues.get(key) ?? 0
+  const delta = Math.max(0, newValue - last)
+  state.cumulativeValues.set(key, newValue)
+  return delta
+}
+
+/**
+ * Normaliza los nombres de métricas nuevos de Claude Code a los nombres
+ * canónicos que usa el store, convirtiendo valores cumulativos a deltas.
+ * Devuelve { name, value } normalizado, o null para ignorar la métrica.
+ */
+function normalizeIncoming(name, value, labels) {
+  const sid = labels['session.id'] ?? ''
+
+  switch (name) {
+    case 'claude_code.token.usage': {
+      const type = labels.type
+      const key  = `token:${sid}:${type}:${labels.model ?? ''}:${labels.query_source ?? ''}`
+      const delta = cumulativeDelta(key, value)
+      const nameMap = {
+        'input':         'claude_code.tokens.input',
+        'output':        'claude_code.tokens.output',
+        'cacheRead':     'claude_code.tokens.cache.read',
+        'cacheCreation': 'claude_code.tokens.cache.creation',
+      }
+      const canonical = nameMap[type]
+      return canonical ? { name: canonical, value: delta } : null
+    }
+
+    case 'claude_code.cost.usage': {
+      const key   = `cost:${sid}:${labels.model ?? ''}:${labels.query_source ?? ''}`
+      const delta = cumulativeDelta(key, value)
+      return { name: 'claude_code.cost', value: delta }
+    }
+
+    case 'claude_code.lines_of_code.count': {
+      const type  = labels.type
+      const key   = `lines:${sid}:${type}`
+      const delta = cumulativeDelta(key, value)
+      if (type === 'added')   return { name: 'claude_code.lines_added',   value: delta }
+      if (type === 'removed') return { name: 'claude_code.lines_removed', value: delta }
+      return null
+    }
+
+    case 'claude_code.commit.count': {
+      const key   = `commit:${sid}`
+      const delta = cumulativeDelta(key, value)
+      return { name: 'claude_code.commits', value: delta }
+    }
+
+    // Métricas que no necesitamos agregar (activo ya se calcula desde eventos)
+    case 'claude_code.session.count':
+    case 'claude_code.active_time.total':
+    case 'claude_code.code_edit_tool.decision':
+      return null
+
+    default:
+      return { name, value }
+  }
+}
 
 /**
  * Resuelve el proyecto de una sesión.
@@ -137,7 +204,12 @@ function scheduleSave() {
  * Procesa un punto de métrica normalizado.
  * @param {{ name, value, timestamp, labels }} metric
  */
-export function processMetric({ name, value, timestamp, labels }) {
+export function processMetric(raw) {
+  const normalized = normalizeIncoming(raw.name, raw.value, raw.labels)
+  if (!normalized) return
+
+  const { name, value } = normalized
+  const { timestamp, labels } = raw
   const sessionId = labels['session.id']
 
   // Saltar sesiones ignoradas
@@ -400,6 +472,7 @@ export function reset() {
   state.tools.clear()
   state.agents.clear()
   state.models.clear()
+  state.cumulativeValues.clear()
   state.lastSeen    = null
   state.startTime   = Date.now()
   state.totalEvents = 0
