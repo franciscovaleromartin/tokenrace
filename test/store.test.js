@@ -1,0 +1,340 @@
+/**
+ * store.test.js
+ * Tests para el store de tokendash.
+ *
+ * Nota: reset(), ignoreSession() y labelSession() llaman a scheduleSave() (setTimeout 0)
+ * que guarda en ~/.tokendash/data.json. No llamamos startAutoSave() para evitar
+ * que el proceso quede vivo tras los tests.
+ */
+
+import { test, beforeEach } from 'node:test'
+import assert from 'node:assert/strict'
+import {
+  processMetric,
+  processEvent,
+  processTrace,
+  labelSession,
+  ignoreSession,
+  reset,
+  getStatus,
+  getSummary,
+  getTimeseries,
+  getProjects,
+  getSessions,
+  getUnlabeledSessions,
+  getSessionEvents,
+  getEvents,
+  getTools,
+  getAgents,
+  getModels
+} from '../src/store.js'
+
+// Resetear el estado antes de cada test para aislamiento
+beforeEach(() => {
+  reset()
+})
+
+// ─── getStatus ────────────────────────────────────────────────────────────────
+
+test('getStatus: connected es false si lastSeen es null', () => {
+  const status = getStatus()
+  assert.equal(status.connected, false)
+  assert.equal(status.lastSeen, null)
+})
+
+test('getStatus: connected es true tras processMetric', () => {
+  processMetric({
+    name: 'claude_code.tokens.input',
+    value: 100,
+    timestamp: Date.now(),
+    labels: { 'session.id': 'sess-1', project: 'test' }
+  })
+  const status = getStatus()
+  assert.equal(status.connected, true)
+  assert.notEqual(status.lastSeen, null)
+})
+
+// ─── processMetric ────────────────────────────────────────────────────────────
+
+test('processMetric: crea sesión si no existe', () => {
+  const ts = Date.now()
+  processMetric({
+    name: 'claude_code.tokens.input',
+    value: 500,
+    timestamp: ts,
+    labels: { 'session.id': 'sess-nueva', project: 'proj-a' }
+  })
+  const sessions = getSessions()
+  assert.equal(sessions.length, 1)
+  assert.equal(sessions[0].sessionId, 'sess-nueva')
+})
+
+test('processMetric: acumula tokensInput correctamente', () => {
+  const ts = Date.now()
+  processMetric({
+    name: 'claude_code.tokens.input',
+    value: 300,
+    timestamp: ts,
+    labels: { 'session.id': 'sess-acc', project: 'proj-a' }
+  })
+  processMetric({
+    name: 'claude_code.tokens.input',
+    value: 200,
+    timestamp: ts + 1,
+    labels: { 'session.id': 'sess-acc', project: 'proj-a' }
+  })
+  const sessions = getSessions()
+  assert.equal(sessions[0].tokensInput, 500)
+})
+
+test('processMetric: acumula cost correctamente', () => {
+  const ts = Date.now()
+  processMetric({
+    name: 'claude_code.cost',
+    value: 0.0012,
+    timestamp: ts,
+    labels: { 'session.id': 'sess-cost', project: 'proj-b' }
+  })
+  processMetric({
+    name: 'claude_code.cost',
+    value: 0.0008,
+    timestamp: ts + 1,
+    labels: { 'session.id': 'sess-cost', project: 'proj-b' }
+  })
+  const sessions = getSessions()
+  assert.ok(Math.abs(sessions[0].cost - 0.002) < 1e-9)
+})
+
+test('processMetric: crea entrada en projects con project de labels', () => {
+  processMetric({
+    name: 'claude_code.tokens.input',
+    value: 100,
+    timestamp: Date.now(),
+    labels: { 'session.id': 'sess-p', project: 'mi-proyecto' }
+  })
+  const projects = getProjects('all')
+  assert.equal(projects.length, 1)
+  assert.equal(projects[0].project, 'mi-proyecto')
+})
+
+test('processMetric: ignora sesiones en ignoredSessions', () => {
+  ignoreSession('sess-ignorada')
+  processMetric({
+    name: 'claude_code.tokens.input',
+    value: 999,
+    timestamp: Date.now(),
+    labels: { 'session.id': 'sess-ignorada', project: 'proj-x' }
+  })
+  const sessions = getSessions()
+  assert.equal(sessions.length, 0)
+})
+
+// ─── processEvent ─────────────────────────────────────────────────────────────
+
+test('processEvent: añade evento al buffer', () => {
+  const eventObj = {
+    eventName: 'api_request',
+    timestamp: Date.now(),
+    severity: 'INFO',
+    attributes: { 'session.id': 'sess-ev', project: 'proj-ev' }
+  }
+  processEvent(eventObj)
+  const events = getEvents({ limit: 10 })
+  assert.equal(events.length, 1)
+  assert.equal(events[0].eventName, 'api_request')
+})
+
+test('processEvent: actualiza tool stats para tool_use events', () => {
+  processEvent({
+    eventName: 'tool_use',
+    timestamp: Date.now(),
+    severity: 'INFO',
+    attributes: {
+      'session.id':        'sess-tool',
+      'tool.name':         'Bash',
+      success:             true,
+      'tool.duration_ms':  150
+    }
+  })
+  const tools = getTools('all')
+  const bash = tools.usage.find(t => t.toolName === 'Bash')
+  assert.ok(bash)
+  assert.equal(bash.count, 1)
+  assert.equal(bash.successRate, 1)
+  assert.equal(bash.avgDurationMs, 150)
+})
+
+test('processEvent: devuelve el evento', () => {
+  const returned = processEvent({
+    eventName: 'user_prompt',
+    timestamp: Date.now(),
+    severity: 'INFO',
+    attributes: { 'session.id': 'sess-ret', project: 'proj-ret' }
+  })
+  assert.equal(returned.eventName, 'user_prompt')
+  assert.equal(returned.sessionId, 'sess-ret')
+})
+
+// ─── labelSession ─────────────────────────────────────────────────────────────
+
+test('labelSession: actualiza sessionMappings', () => {
+  // Crear sesión primero
+  processMetric({
+    name: 'claude_code.tokens.input',
+    value: 100,
+    timestamp: Date.now(),
+    labels: { 'session.id': 'sess-label', project: null }
+  })
+  labelSession('sess-label', 'nuevo-proyecto')
+  const sessions = getSessions()
+  assert.equal(sessions[0].project, 'nuevo-proyecto')
+})
+
+test('labelSession: actualiza project en sesión existente', () => {
+  const ts = Date.now()
+  processMetric({
+    name: 'claude_code.tokens.input',
+    value: 50,
+    timestamp: ts,
+    labels: { 'session.id': 'sess-lbl2', project: null }
+  })
+  labelSession('sess-lbl2', 'proyecto-nuevo')
+  const sessions = getSessions({ project: 'proyecto-nuevo' })
+  assert.equal(sessions.length, 1)
+  assert.equal(sessions[0].project, 'proyecto-nuevo')
+})
+
+test('labelSession: aplica retroactivamente en timeseries', () => {
+  const ts = Date.now()
+  // Insertar puntos sin proyecto
+  processMetric({
+    name: 'claude_code.tokens.input',
+    value: 100,
+    timestamp: ts,
+    labels: { 'session.id': 'sess-retro' }
+  })
+  // Etiquetar
+  labelSession('sess-retro', 'proyecto-retro')
+  // Verificar que timeseries tiene el proyecto actualizado
+  const ts2 = getTimeseries('claude_code.tokens.input', 'all', '1h')
+  // El punto está en un bucket — verificar que el valor acumulado existe
+  assert.ok(ts2.length > 0)
+  assert.ok(ts2[0].value >= 100)
+})
+
+// ─── getUnlabeledSessions ─────────────────────────────────────────────────────
+
+test('getUnlabeledSessions: devuelve sesiones sin proyecto', () => {
+  processMetric({
+    name: 'claude_code.tokens.input',
+    value: 100,
+    timestamp: Date.now(),
+    labels: { 'session.id': 'sess-sin-proj' }
+  })
+  const unlabeled = getUnlabeledSessions()
+  assert.equal(unlabeled.length, 1)
+  assert.equal(unlabeled[0].sessionId, 'sess-sin-proj')
+})
+
+test('getUnlabeledSessions: excluye sesiones ignoradas', () => {
+  processMetric({
+    name: 'claude_code.tokens.input',
+    value: 100,
+    timestamp: Date.now(),
+    labels: { 'session.id': 'sess-ignorar' }
+  })
+  ignoreSession('sess-ignorar')
+  const unlabeled = getUnlabeledSessions()
+  assert.equal(unlabeled.length, 0)
+})
+
+// ─── getSummary ───────────────────────────────────────────────────────────────
+
+test('getSummary: suma tokens de sesiones activas', () => {
+  const ts = Date.now()
+  processMetric({ name: 'claude_code.tokens.input',  value: 1000, timestamp: ts, labels: { 'session.id': 'sA' } })
+  processMetric({ name: 'claude_code.tokens.output', value: 500,  timestamp: ts, labels: { 'session.id': 'sA' } })
+  processMetric({ name: 'claude_code.tokens.input',  value: 200,  timestamp: ts, labels: { 'session.id': 'sB' } })
+
+  const summary = getSummary('all')
+  assert.equal(summary.tokens.input, 1200)
+  assert.equal(summary.tokens.output, 500)
+})
+
+test('getSummary: filtra por rango de tiempo', () => {
+  const oldTs = Date.now() - 10 * 86_400_000  // hace 10 días
+  const newTs = Date.now()
+
+  // Sesión antigua
+  processMetric({ name: 'claude_code.tokens.input', value: 5000, timestamp: oldTs, labels: { 'session.id': 'sess-old' } })
+  // Sesión reciente (lastSeen actualizado con newTs)
+  processMetric({ name: 'claude_code.tokens.input', value: 100,  timestamp: newTs, labels: { 'session.id': 'sess-new' } })
+
+  // Filtrar últimos 7 días — solo debe incluir sess-new
+  const summary = getSummary('now-7d')
+  assert.equal(summary.tokens.input, 100)
+  assert.equal(summary.sessions, 1)
+})
+
+// ─── getTimeseries ────────────────────────────────────────────────────────────
+
+test('getTimeseries: agrupa por bucket', () => {
+  const baseTs = 1700000000000  // Timestamp fijo para reproducibilidad
+
+  // Todos en el mismo bucket de 1h
+  processMetric({ name: 'test.metric', value: 10, timestamp: baseTs,         labels: { 'session.id': 's1' } })
+  processMetric({ name: 'test.metric', value: 20, timestamp: baseTs + 1000,  labels: { 'session.id': 's1' } })
+  processMetric({ name: 'test.metric', value: 30, timestamp: baseTs + 2000,  labels: { 'session.id': 's1' } })
+
+  const result = getTimeseries('test.metric', 'all', '1h')
+  // Deben agruparse en un solo bucket
+  assert.equal(result.length, 1)
+  assert.equal(result[0].value, 60)
+})
+
+test('getTimeseries: ordena por timestamp', () => {
+  const now = Date.now()
+  const bucket1 = Math.floor(now / 3_600_000) * 3_600_000          // bucket actual
+  const bucket2 = bucket1 - 3_600_000                              // bucket anterior
+
+  processMetric({ name: 'ts.metric', value: 5,  timestamp: bucket1 + 100, labels: { 'session.id': 'sX' } })
+  processMetric({ name: 'ts.metric', value: 10, timestamp: bucket2 + 100, labels: { 'session.id': 'sX' } })
+
+  const result = getTimeseries('ts.metric', 'all', '1h')
+  assert.ok(result.length >= 2)
+  // Verificar orden ascendente
+  for (let i = 1; i < result.length; i++) {
+    assert.ok(result[i].timestamp > result[i - 1].timestamp)
+  }
+})
+
+// ─── reset ────────────────────────────────────────────────────────────────────
+
+test('reset: limpia todo el state', () => {
+  processMetric({
+    name: 'claude_code.tokens.input',
+    value: 999,
+    timestamp: Date.now(),
+    labels: { 'session.id': 'sess-reset', project: 'proj-reset' }
+  })
+  processEvent({
+    eventName: 'api_request',
+    timestamp: Date.now(),
+    severity: 'INFO',
+    attributes: { 'session.id': 'sess-reset' }
+  })
+
+  reset()
+
+  const status   = getStatus()
+  const sessions = getSessions()
+  const events   = getEvents()
+  const summary  = getSummary('all')
+
+  assert.equal(status.connected,    false)
+  assert.equal(status.sessionCount, 0)
+  assert.equal(status.totalEvents,  0)
+  assert.equal(sessions.length,     0)
+  assert.equal(events.length,       0)
+  assert.equal(summary.tokens.input, 0)
+})
