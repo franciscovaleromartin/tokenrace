@@ -5,9 +5,9 @@ export function formatNumber(n: number): string {
   return n.toFixed(0)
 }
 
-/** Formatea costes con 4 decimales: 0.0234 → "$0.0234" */
+/** Formatea costes con 2 decimales: 2.4105 → "$2.41" */
 export function formatCost(n: number): string {
-  return `$${n.toFixed(4)}`
+  return `$${n.toFixed(2)}`
 }
 
 /** Formatea duración en ms: 3_661_000 → "1h 1m", 90000 → "1m 30s" */
