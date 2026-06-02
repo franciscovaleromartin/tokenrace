@@ -14,7 +14,7 @@ import {
   getStatus, getSummary, getTimeseries, getProjects,
   getSessions, getUnlabeledSessions, getSessionEvents,
   getEvents, getTools, getAgents, getModels,
-  labelSession, ignoreSession, reset
+  labelSession, reset
 } from './store.js'
 
 // ─── Clientes SSE activos ────────────────────────────────────────────────────

@@ -42,7 +42,7 @@ export async function startServer({ port = 1337 } = {}) {
     for (const point of points) {
       processMetric(point)
     }
-    if (points.length > 0) broadcast('metrics', { count: points.length })
+    broadcast('metrics', { count: points.length })
     res.json({ partialSuccess: {} })
   })
 
@@ -68,7 +68,7 @@ export async function startServer({ port = 1337 } = {}) {
     for (const span of spans) {
       processTrace(span)
     }
-    if (spans.length > 0) broadcast('trace', { count: spans.length })
+    broadcast('trace', { count: spans.length })
     res.json({ partialSuccess: {} })
   })
 
