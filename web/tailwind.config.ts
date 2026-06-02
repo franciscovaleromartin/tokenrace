@@ -5,7 +5,7 @@ export default {
   theme: {
     extend: {
       colors: {
-        'bg-base':       '#000000',
+        'bg-base':       '#14191F',
         'bg-card':       '#0d0d0d',
         'bg-card-hover': '#141414',
         'bg-border':     '#1a1a1a',
@@ -13,7 +13,7 @@ export default {
         'text-primary':  '#ffffff',
         'text-secondary':'#888888',
         'text-muted':    '#444444',
-        'accent-green':  '#00ff88',
+        'accent-green':  '#ff6b35',
         'accent-blue':   '#4da6ff',
         'accent-purple': '#a855f7',
         'accent-orange': '#ff6b35',
