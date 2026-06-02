@@ -91,7 +91,7 @@ export async function startServer({ port = 1337 } = {}) {
   app.use(express.static(distPath))
 
   // SPA fallback: cualquier ruta no-API sirve index.html
-  app.get('*', (req, res) => {
+  app.get(/^(?!\/api\/)/, (req, res) => {
     const indexPath = path.join(distPath, 'index.html')
     res.sendFile(indexPath, (err) => {
       if (err) res.status(404).send('Dashboard no disponible. Ejecuta: npm run build')

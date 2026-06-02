@@ -20,6 +20,7 @@ import {
 // ─── Clientes SSE activos ────────────────────────────────────────────────────
 // Mapa de clientes SSE activos: clientId → res
 const sseClients = new Map()
+let _nextClientId = 0
 
 // ─── Broadcast ───────────────────────────────────────────────────────────────
 
@@ -44,12 +45,9 @@ export function broadcast(type, payload) {
 export function createRouter() {
   const router = Router()
 
-  // Middleware CORS y JSON para todas las rutas del router
-  // (excepto /api/stream, que setea sus propios headers)
+  // Middleware CORS para todas las rutas del router
   router.use((req, res, next) => {
-    if (req.path === '/api/stream') return next()
     res.setHeader('Access-Control-Allow-Origin', '*')
-    res.setHeader('Content-Type', 'application/json')
     next()
   })
 
@@ -66,7 +64,7 @@ export function createRouter() {
     res.setHeader('Access-Control-Allow-Origin', '*')
     res.flushHeaders()
 
-    const clientId = Date.now() + Math.random()
+    const clientId = ++_nextClientId
     sseClients.set(clientId, res)
 
     // Heartbeat cada 15 segundos
@@ -152,7 +150,7 @@ export function createRouter() {
    * Asigna un proyecto a una sesión.
    * Body: { project: string }
    */
-  router.post('/api/sessions/:sessionId/label', express_json(), (req, res) => {
+  router.post('/api/sessions/:sessionId/label', (req, res) => {
     const { project } = req.body
     if (!project || typeof project !== 'string') {
       return res.status(400).json({ error: 'project requerido' })
@@ -171,8 +169,3 @@ export function createRouter() {
   return router
 }
 
-// Importación lazy de express.json para usar en rutas POST del router
-// (el body ya viene parseado desde el middleware global en server.js)
-function express_json() {
-  return (req, res, next) => next()
-}
