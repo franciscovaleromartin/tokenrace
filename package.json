@@ -1,8 +1,10 @@
 {
   "name": "tokenrace",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Monitor en tiempo real para Claude Code",
-  "bin": { "tokenrace": "./bin/cli.js" },
+  "bin": {
+    "tokenrace": "./bin/cli.js"
+  },
   "type": "module",
   "scripts": {
     "start": "node bin/cli.js",
@@ -19,11 +21,31 @@
   "devDependencies": {
     "supertest": "^7.0.0"
   },
-  "files": ["bin/", "src/", "dist/"],
-  "engines": { "node": ">=18" },
-  "keywords": ["claude", "claude-code", "telemetry", "dashboard", "opentelemetry", "otlp", "tokens", "cost"],
+  "files": [
+    "bin/",
+    "src/",
+    "dist/"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "claude",
+    "claude-code",
+    "telemetry",
+    "dashboard",
+    "opentelemetry",
+    "otlp",
+    "tokens",
+    "cost"
+  ],
   "license": "MIT",
-  "repository": { "type": "git", "url": "https://github.com/franciscovaleromartin/tokenrace" },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/franciscovaleromartin/tokenrace"
+  },
   "homepage": "https://github.com/franciscovaleromartin/tokenrace#readme",
-  "bugs": { "url": "https://github.com/franciscovaleromartin/tokenrace/issues" }
+  "bugs": {
+    "url": "https://github.com/franciscovaleromartin/tokenrace/issues"
+  }
 }
