@@ -273,7 +273,7 @@ export function processEvent({ eventName, timestamp, severity, attributes }) {
   state.eventIndex++
 
   // ── Tool stats ──
-  if (eventName === 'tool_use' || eventName.includes('tool')) {
+  if (eventName === 'tool_use') {
     const toolName = attributes['tool.name'] ?? attributes.tool ?? 'unknown'
 
     if (!state.tools.has(toolName)) {

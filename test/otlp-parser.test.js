@@ -197,15 +197,15 @@ test('parseEvents: parsea log record con event.name en attributes', () => {
   assert.equal(result[0].severity, 'INFO')
 })
 
-test('parseEvents: usa body.stringValue como fallback para eventName', () => {
+test('parseEvents: usa lr.body.stringValue como fallback para eventName', () => {
   const body = {
-    stringValue: 'fallback_event',
     resourceLogs: [{
       resource: { attributes: [] },
       scopeLogs: [{
         logRecords: [{
           timeUnixNano: '1700000000000000000',
           severityText: 'DEBUG',
+          body: { stringValue: 'fallback_event' },
           attributes: []
         }]
       }]

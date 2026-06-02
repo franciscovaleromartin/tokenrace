@@ -119,8 +119,8 @@ export function parseEvents(body) {
         for (const lr of sl.logRecords ?? []) {
           const dpAttrs = extractAttributes(lr.attributes)
 
-          // eventName: buscar en attributes["event.name"] → body.stringValue → "unknown"
-          const eventName = dpAttrs['event.name'] ?? body?.stringValue ?? 'unknown'
+          // eventName: buscar en attributes["event.name"] → lr.body.stringValue → "unknown"
+          const eventName = dpAttrs['event.name'] ?? lr.body?.stringValue ?? 'unknown'
 
           const timestamp = lr.timeUnixNano
             ? Number(lr.timeUnixNano) / 1_000_000
