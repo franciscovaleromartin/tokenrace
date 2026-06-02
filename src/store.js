@@ -81,7 +81,7 @@ function normalizeIncoming(name, value, labels) {
     }
 
     case 'claude_code.cost.usage': {
-      const key   = `cost:${sid}:${labels.model ?? ''}:${labels.query_source ?? ''}`
+      const key   = `cost:${sid}:${labels.model ?? ''}:${labels.query_source ?? ''}:${labels.effort ?? ''}`
       const delta = cumulativeDelta(key, value)
       return { name: 'claude_code.cost', value: delta }
     }
