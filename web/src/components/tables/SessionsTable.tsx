@@ -23,7 +23,9 @@ export function SessionsTable({ timeRange, sseVersion }: SessionsTableProps) {
   function toggleExpand(sessionId: string) {
     if (expanded === sessionId) {
       setExpanded(null)
+      setSessionEvents([])
     } else {
+      setSessionEvents([])
       setExpanded(sessionId)
       api.sessionEvents(sessionId).then(setSessionEvents).catch(() => {})
     }
@@ -118,7 +120,7 @@ export function SessionsTable({ timeRange, sseVersion }: SessionsTableProps) {
                       {sessionEvents.length === 0
                         ? <span className="text-text-muted">Sin eventos</span>
                         : sessionEvents.slice(-20).map((ev, i) => (
-                          <div key={i} className="flex gap-2 text-text-secondary">
+                          <div key={`${ev.timestamp}-${ev.eventName}-${i}`} className="flex gap-2 text-text-secondary">
                             <span className="text-text-muted shrink-0">{new Date(ev.timestamp).toLocaleTimeString()}</span>
                             <span className="text-accent-teal">{ev.eventName}</span>
                           </div>

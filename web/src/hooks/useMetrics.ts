@@ -10,6 +10,7 @@ export function useMetrics(timeRange: TimeRange) {
   const [summary, setSummary] = useState<Summary | null>(null)
   const [sseVersion, setSseVersion] = useState(0)
   const lastFetchRef = useRef<number>(0)
+  const lastSseVersionRef = useRef<number>(0)
 
   const fetchData = useCallback(async () => {
     lastFetchRef.current = Date.now()
@@ -30,14 +31,20 @@ export function useMetrics(timeRange: TimeRange) {
     fetchData()
   }, [fetchData])
 
-  // Al llegar un evento SSE: incrementar sseVersion (para tablas/charts) +
-  // refrescar summary si los datos tienen más de 5s
+  // Al llegar un evento SSE: refrescar summary si los datos tienen más de 5s,
+  // y throttlear sseVersion a 1 incremento cada 5s para evitar re-fetches
+  // en cascada en todos los charts y tablas activos.
   const handleSSE = useCallback((_type: string, _payload: unknown) => {
-    setSseVersion(v => v + 1)
     if (Date.now() - lastFetchRef.current > 5_000) {
       fetchData()
     } else {
       api.status().then(setStatus).catch(() => {})
+    }
+
+    const now = Date.now()
+    if (now - lastSseVersionRef.current > 5_000) {
+      lastSseVersionRef.current = now
+      setSseVersion(v => v + 1)
     }
   }, [fetchData])
 

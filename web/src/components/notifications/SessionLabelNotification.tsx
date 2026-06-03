@@ -40,10 +40,11 @@ export function SessionLabelNotification({ onLabeled }: SessionLabelNotification
           .map(s => ({ session: s, status: 'pending' as const }))
         return [...prev, ...newOnes]
       })
-      setKnownProjects(projects.map(p => p.project).sort((a, b) =>
-        unlabeled.filter(s => s.sessionId === b.toString()).length -
-        unlabeled.filter(s => s.sessionId === a.toString()).length
-      ))
+      setKnownProjects(
+        [...projects]
+          .sort((a, b) => b.sessions - a.sessions)
+          .map(p => p.project)
+      )
     } catch {
       // ignorar errores de red
     }

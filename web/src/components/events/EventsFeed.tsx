@@ -37,8 +37,9 @@ export function EventsFeed({ timeRange, sseVersion }: { timeRange: TimeRange; ss
   const [paused, setPaused] = useState(false)
 
   useEffect(() => {
+    if (paused) return
     api.events(500).then(setEvents).catch(() => {})
-  }, [timeRange, sseVersion])
+  }, [timeRange, sseVersion, paused])
 
   const filtered = events.filter(ev => matchesFilter(ev, filter))
 
@@ -72,7 +73,7 @@ export function EventsFeed({ timeRange, sseVersion }: { timeRange: TimeRange; ss
         {filtered.length === 0
           ? <span className="text-text-muted">Sin eventos</span>
           : filtered.map((ev, i) => (
-            <div key={i} className="flex gap-2 hover:bg-bg-base px-1 rounded">
+            <div key={`${ev.sessionId ?? ''}-${ev.timestamp}-${ev.eventName}-${i}`} className="flex gap-2 hover:bg-bg-base px-1 rounded">
               <span className="text-text-muted shrink-0">
                 {new Date(ev.timestamp).toLocaleTimeString()}
               </span>

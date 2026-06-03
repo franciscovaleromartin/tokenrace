@@ -241,22 +241,23 @@ test('labelSession: actualiza project en sesión existente', () => {
   assert.equal(sessions[0].project, 'proyecto-nuevo')
 })
 
-test('labelSession: aplica retroactivamente en timeseries', () => {
+test('labelSession: aplica retroactivamente — getProjects resuelve proyecto vía sessionMappings', () => {
   const ts = Date.now()
-  // Insertar puntos sin proyecto
+  // Insertar métrica sin proyecto
   processMetric({
     name: 'claude_code.tokens.input',
     value: 100,
     timestamp: ts,
     labels: { 'session.id': 'sess-retro' }
   })
-  // Etiquetar
+  // Sin etiquetar, la sesión no aparece en ningún proyecto
+  assert.equal(getProjects('all').length, 0)
+
+  // Etiquetar — resolveProject() debe encontrar el proyecto vía sessionMappings
   labelSession('sess-retro', 'proyecto-retro')
-  // Verificar que timeseries tiene el proyecto actualizado
-  const ts2 = getTimeseries('claude_code.tokens.input', 'all', '1h')
-  // El punto está en un bucket — verificar que el valor acumulado existe
-  assert.ok(ts2.length > 0)
-  assert.ok(ts2[0].value >= 100)
+  const projects = getProjects('all')
+  assert.equal(projects.length, 1)
+  assert.equal(projects[0].project, 'proyecto-retro')
 })
 
 // ─── getUnlabeledSessions ─────────────────────────────────────────────────────

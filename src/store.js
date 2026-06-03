@@ -436,15 +436,9 @@ export function labelSession(sessionId, project) {
     state.sessions.get(sessionId).project = project
   }
 
-  // Aplicar retroactivamente en timeseries
-  for (const points of state.timeseries.values()) {
-    for (const point of points) {
-      if (point.labels['session.id'] === sessionId) {
-        point.labels.project = project
-      }
-    }
-  }
-
+  // No es necesario propagar retroactivamente a los labels de timeseries:
+  // resolveProject() consulta sessionMappings primero, por lo que todos los
+  // lectores de labels.project ya obtendrán el valor correcto.
   rebuildProjectAggregates()
   scheduleSave()
 }
@@ -486,13 +480,16 @@ export function reset() {
  * Estado de conexión del servidor.
  */
 export function getStatus() {
+  let sessionCount = 0
+  for (const id of state.sessions.keys()) {
+    if (!state.ignoredSessions.has(id)) sessionCount++
+  }
   return {
-    connected:    state.lastSeen !== null,
-    lastSeen:     state.lastSeen,
-    sessionCount: Array.from(state.sessions.keys())
-      .filter(id => !state.ignoredSessions.has(id)).length,
-    totalEvents:  state.totalEvents,
-    uptime:       Date.now() - state.startTime
+    connected:   state.lastSeen !== null,
+    lastSeen:    state.lastSeen,
+    sessionCount,
+    totalEvents: state.totalEvents,
+    uptime:      Date.now() - state.startTime
   }
 }
 
@@ -587,8 +584,24 @@ export function getProjects(from) {
   const minTs  = parseTimeRange(from)
   const result = []
 
+  // Pre-agregar commits/líneas desde timeseries en un único recorrido O(puntos)
+  // en lugar de O(proyectos × puntos)
+  const tsAgg = new Map() // projectName → { commits, linesAdded, linesRemoved }
+  for (const [metric, field] of [
+    ['claude_code.commits',       'commits'],
+    ['claude_code.lines_added',   'linesAdded'],
+    ['claude_code.lines_removed', 'linesRemoved'],
+  ]) {
+    for (const point of state.timeseries.get(metric) ?? []) {
+      if (point.ts < minTs) continue
+      const proj = resolveProject(point.labels['session.id'], point.labels.project)
+      if (!proj) continue
+      if (!tsAgg.has(proj)) tsAgg.set(proj, { commits: 0, linesAdded: 0, linesRemoved: 0 })
+      tsAgg.get(proj)[field] += point.value
+    }
+  }
+
   for (const [project, proj] of state.projects.entries()) {
-    // Filtrar sesiones activas en el rango
     const activeSessions = new Set()
     let cost = 0, tokensInput = 0, tokensOutput = 0, tokensCache = 0
 
@@ -604,20 +617,7 @@ export function getProjects(from) {
 
     if (activeSessions.size === 0 && minTs > 0) continue
 
-    // Commits y líneas filtrados por rango
-    let commits = 0, linesAdded = 0, linesRemoved = 0
-    const tsMap = {
-      'claude_code.commits':       (v) => { commits += v },
-      'claude_code.lines_added':   (v) => { linesAdded += v },
-      'claude_code.lines_removed': (v) => { linesRemoved += v }
-    }
-    for (const [metric, accum] of Object.entries(tsMap)) {
-      for (const point of state.timeseries.get(metric) ?? []) {
-        const pointProject = resolveProject(point.labels['session.id'], point.labels.project)
-        if (pointProject === project && point.ts >= minTs) accum(point.value)
-      }
-    }
-
+    const { commits, linesAdded, linesRemoved } = tsAgg.get(project) ?? { commits: 0, linesAdded: 0, linesRemoved: 0 }
     const cacheHitRate = tokensInput > 0 ? tokensCache / tokensInput : 0
 
     result.push({
@@ -836,17 +836,11 @@ export function loadFromDisk() {
       state.startTime = data.startTime
     }
 
-    // Re-aplicar mappings a sesiones y timeseries
+    // Re-aplicar mappings a sesiones (timeseries no necesitan propagación:
+    // resolveProject() consulta sessionMappings primero en todos los lectores)
     for (const [sessionId, project] of state.sessionMappings.entries()) {
       if (state.sessions.has(sessionId)) {
         state.sessions.get(sessionId).project = project
-      }
-      for (const points of state.timeseries.values()) {
-        for (const point of points) {
-          if (point.labels['session.id'] === sessionId) {
-            point.labels.project = project
-          }
-        }
       }
     }
 
