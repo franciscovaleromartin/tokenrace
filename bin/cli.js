@@ -35,32 +35,10 @@ openTerminalHere(CWD)
 
 // ─── helpers ────────────────────────────────────────────────────────────────
 
-/**
- * Abre el dashboard en modo app (sin barra de navegación ni pestañas).
- * Intenta Chrome en macOS; si no está disponible usa el navegador por defecto.
- */
+/** Abre el dashboard en el navegador predeterminado del sistema. */
 function openDashboard(port) {
   const url = `http://localhost:${port}`
-
-  if (process.platform === 'darwin') {
-    // macOS: intentar Chrome en modo app (ventana sin chrome de navegador)
-    const chrome = spawn(
-      'open', ['-na', 'Google Chrome', '--args', `--app=${url}`, '--new-window'],
-      { detached: true, stdio: 'ignore' }
-    )
-    let fallbackDone = false
-    const fallback = () => {
-      if (fallbackDone) return
-      fallbackDone = true
-      // Chrome no disponible — abrir en nueva ventana del navegador por defecto
-      open(url, { newInstance: true }).catch(() => open(url).catch(() => {}))
-    }
-    chrome.on('close', (code) => { if (code !== 0) fallback() })
-    chrome.on('error', fallback)
-    chrome.unref()
-  } else {
-    open(url, { newInstance: true }).catch(() => open(url).catch(() => {}))
-  }
+  open(url).catch(() => {})
 }
 
 /**
