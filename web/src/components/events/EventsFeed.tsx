@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Pause, Play } from 'lucide-react'
 import { api } from '../../api'
+import { getPrices } from '../../utils/prices'
 import type { Event, TimeRange } from '../../types'
 
 type EventFilter = 'all' | 'api' | 'tools' | 'prompts' | 'errors'
@@ -12,6 +13,35 @@ const FILTERS: { id: EventFilter; label: string }[] = [
   { id: 'prompts', label: 'Prompts' },
   { id: 'errors',  label: 'Errores' },
 ]
+
+function formatCostEvent(n: number): string {
+  if (n >= 1)    return `$${n.toFixed(2)}`
+  if (n >= 0.01) return `$${n.toFixed(3)}`
+  return `$${n.toFixed(4)}`
+}
+
+function eventCost(ev: Event): number | null {
+  const a = ev.attributes
+
+  // Coste directo reportado en el atributo
+  if (typeof a.cost === 'number' && a.cost > 0) return a.cost
+
+  // Calcular desde tokens si están disponibles
+  const input        = Number(a.input_tokens          ?? a['tokens.input']                  ?? 0)
+  const output       = Number(a.output_tokens         ?? a['tokens.output']                 ?? 0)
+  const cacheRead    = Number(a.cache_read_input_tokens    ?? a['tokens.cache_read']         ?? 0)
+  const cacheWrite   = Number(a.cache_creation_input_tokens ?? a['tokens.cache_creation']   ?? 0)
+
+  if (input === 0 && output === 0) return null
+
+  const p = getPrices(ev.model)
+  return (
+    input      * p.input      / 1_000_000 +
+    output     * p.output     / 1_000_000 +
+    cacheRead  * p.cacheRead  / 1_000_000 +
+    cacheWrite * p.cacheWrite / 1_000_000
+  )
+}
 
 function eventColor(name: string): string {
   if (name.includes('error'))       return 'text-accent-orange'
@@ -72,17 +102,23 @@ export function EventsFeed({ timeRange, sseVersion }: { timeRange: TimeRange; ss
       <div className="flex-1 overflow-y-auto p-3 font-mono text-xs space-y-0.5">
         {filtered.length === 0
           ? <span className="text-text-muted">Sin eventos</span>
-          : filtered.map((ev, i) => (
-            <div key={`${ev.sessionId ?? ''}-${ev.timestamp}-${ev.eventName}-${i}`} className="flex gap-2 hover:bg-bg-base px-1 rounded">
-              <span className="text-text-muted shrink-0">
-                {new Date(ev.timestamp).toLocaleTimeString()}
-              </span>
-              <span className={`shrink-0 ${eventColor(ev.eventName)}`}>{ev.eventName}</span>
-              {ev.sessionId && (
-                <span className="text-text-muted">{ev.sessionId.slice(0, 6)}…</span>
-              )}
-            </div>
-          ))
+          : filtered.map((ev, i) => {
+            const cost = eventCost(ev)
+            return (
+              <div key={`${ev.sessionId ?? ''}-${ev.timestamp}-${ev.eventName}-${i}`} className="flex gap-2 hover:bg-bg-base px-1 rounded">
+                <span className="text-text-muted shrink-0">
+                  {new Date(ev.timestamp).toLocaleTimeString()}
+                </span>
+                <span className={`shrink-0 ${eventColor(ev.eventName)}`}>{ev.eventName}</span>
+                {ev.sessionId && (
+                  <span className="text-text-muted">{ev.sessionId.slice(0, 6)}…</span>
+                )}
+                {cost !== null && (
+                  <span className="text-accent-purple ml-auto shrink-0">{formatCostEvent(cost)}</span>
+                )}
+              </div>
+            )
+          })
         }
       </div>
     </div>
