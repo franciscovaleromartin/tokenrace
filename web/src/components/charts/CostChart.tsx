@@ -53,7 +53,7 @@ export function CostChart({ timeRange, sseVersion }: CostChartProps) {
             tick={{ fill: '#888888', fontSize: 11 }}
             tickLine={false}
             axisLine={false}
-            tickFormatter={(v: number) => `$${v.toFixed(3)}`}
+            tickFormatter={(v: number) => `$${v.toFixed(2)}`}
           />
           <Tooltip
             contentStyle={{ background: '#0d0d0d', border: '1px solid #1a1a1a', borderRadius: '6px' }}
