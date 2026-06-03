@@ -8,6 +8,8 @@ Run one command — tokenrace starts a local server that receives telemetry from
 npx tokenrace
 ```
 
+![tokenrace dashboard](screenshots/tokenrace-dashboard.png)
+
 ---
 
 ## What it shows
