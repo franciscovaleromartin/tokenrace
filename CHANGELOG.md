@@ -4,6 +4,14 @@ All notable changes to tokenrace are documented here.
 
 ---
 
+## [0.1.11] — 2026-06-03
+
+### Added
+- Dashboard now opens as a standalone app window (Chrome `--app` mode on macOS — no address bar, no tabs). Falls back to a new default browser window if Chrome is not available.
+- A new terminal window opens automatically in the directory where `npx tokenrace` was run. macOS uses `Terminal.app` via AppleScript; Linux tries `gnome-terminal`, `konsole`, `xfce4-terminal` and `xterm` in order; Windows uses `cmd`.
+
+---
+
 ## [0.1.10] — 2026-06-03
 
 ### Performance
