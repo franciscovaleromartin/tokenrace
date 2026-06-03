@@ -21,6 +21,7 @@ export function extractAttributes(attrs) {
   for (const attr of attrs) {
     const { key, value } = attr
     if (!key || !value) continue
+    if (key === '__proto__' || key === 'constructor' || key === 'prototype') continue
 
     if ('stringValue' in value) {
       result[key] = value.stringValue

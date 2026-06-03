@@ -31,6 +31,14 @@ export async function startServer({ port = 1337 } = {}) {
   const app = express()
   app.use(express.json({ limit: '10mb' }))
 
+  // Headers de seguridad HTTP mínimos
+  app.use((_req, res, next) => {
+    res.setHeader('X-Content-Type-Options', 'nosniff')
+    res.setHeader('X-Frame-Options', 'DENY')
+    res.setHeader('Referrer-Policy', 'no-referrer')
+    next()
+  })
+
   // ── Endpoints OTLP ──────────────────────────────────────────────────────────
 
   /**
@@ -83,7 +91,7 @@ export async function startServer({ port = 1337 } = {}) {
   })
 
   // ── API REST + SSE ──────────────────────────────────────────────────────────
-  app.use(createRouter())
+  app.use(createRouter({ port }))
 
   // ── Archivos estáticos (web compilada) ──────────────────────────────────────
   // dist/ está en la raíz del proyecto (un nivel arriba de src/)
@@ -111,7 +119,7 @@ export async function startServer({ port = 1337 } = {}) {
 
   // ── Arrancar servidor ───────────────────────────────────────────────────────
   return new Promise((resolve) => {
-    const server = app.listen(port, () => {
+    const server = app.listen(port, '127.0.0.1', () => {
       resolve({ app, server, autoSaveInterval })
     })
   })

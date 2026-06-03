@@ -40,16 +40,36 @@ export function broadcast(type, payload) {
 
 /**
  * Crea y devuelve el router Express con todas las rutas /api/*.
+ * @param {{ port?: number }} options
  * @returns {Router}
  */
-export function createRouter() {
+export function createRouter({ port = 1337 } = {}) {
   const router = Router()
 
-  // Middleware CORS para todas las rutas del router
+  // Solo se permiten solicitudes del propio dashboard (mismo origen)
+  const allowedOrigins = new Set([
+    `http://localhost:${port}`,
+    `http://127.0.0.1:${port}`,
+  ])
+
+  // CORS: responder solo al origen del dashboard, nunca con wildcard
   router.use((req, res, next) => {
-    res.setHeader('Access-Control-Allow-Origin', '*')
+    const origin = req.headers.origin
+    if (origin && allowedOrigins.has(origin)) {
+      res.setHeader('Access-Control-Allow-Origin', origin)
+    }
     next()
   })
+
+  // Guard CSRF: bloquea POST con Origin presente pero no permitido.
+  // Requests sin Origin (CLI, tests, curl) pasan sin restricción.
+  function requireSafeOrigin(req, res, next) {
+    const origin = req.headers.origin
+    if (origin && !allowedOrigins.has(origin)) {
+      return res.status(403).json({ error: 'origen no permitido' })
+    }
+    return next()
+  }
 
   // ── SSE ────────────────────────────────────────────────────────────────────
 
@@ -61,7 +81,6 @@ export function createRouter() {
     res.setHeader('Content-Type', 'text/event-stream')
     res.setHeader('Cache-Control', 'no-cache')
     res.setHeader('Connection', 'keep-alive')
-    res.setHeader('Access-Control-Allow-Origin', '*')
     res.flushHeaders()
 
     const clientId = ++_nextClientId
@@ -111,7 +130,7 @@ export function createRouter() {
   /** GET /api/sessions — lista de sesiones, acepta ?limit, ?project */
   router.get('/api/sessions', (req, res) => {
     res.json(getSessions({
-      limit: req.query.limit ? Number(req.query.limit) : 50,
+      limit: Math.min(Number(req.query.limit) || 50, 500),
       project: req.query.project || null
     }))
   })
@@ -124,7 +143,7 @@ export function createRouter() {
   /** GET /api/events — eventos filtrados, acepta ?limit, ?type, ?project */
   router.get('/api/events', (req, res) => {
     res.json(getEvents({
-      limit: req.query.limit ? Number(req.query.limit) : 200,
+      limit: Math.min(Number(req.query.limit) || 200, 500),
       type: req.query.type || null,
       project: req.query.project || null
     }))
@@ -150,10 +169,10 @@ export function createRouter() {
    * Asigna un proyecto a una sesión.
    * Body: { project: string }
    */
-  router.post('/api/sessions/:sessionId/label', (req, res) => {
+  router.post('/api/sessions/:sessionId/label', requireSafeOrigin, (req, res) => {
     const { project } = req.body
-    if (!project || typeof project !== 'string') {
-      return res.status(400).json({ error: 'project requerido' })
+    if (!project || typeof project !== 'string' || project.length > 200) {
+      return res.status(400).json({ error: 'project inválido' })
     }
     labelSession(req.params.sessionId, project)
     broadcast('label_updated', { sessionId: req.params.sessionId, project })
@@ -164,13 +183,13 @@ export function createRouter() {
    * POST /api/sessions/:sessionId/ignore
    * Marca una sesión como ignorada (no aparecerá en notificaciones ni en métricas).
    */
-  router.post('/api/sessions/:sessionId/ignore', (req, res) => {
+  router.post('/api/sessions/:sessionId/ignore', requireSafeOrigin, (req, res) => {
     ignoreSession(req.params.sessionId)
     res.json({ ok: true })
   })
 
   /** POST /api/reset — resetea todo el estado en memoria */
-  router.post('/api/reset', (req, res) => {
+  router.post('/api/reset', requireSafeOrigin, (req, res) => {
     reset()
     res.json({ ok: true })
   })

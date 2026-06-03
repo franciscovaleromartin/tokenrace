@@ -220,7 +220,10 @@ export function processMetric(raw) {
 
   // ── Timeseries ──
   if (!state.timeseries.has(name)) state.timeseries.set(name, [])
-  state.timeseries.get(name).push({ ts: timestamp, value, labels })
+  const tsPoints = state.timeseries.get(name)
+  tsPoints.push({ ts: timestamp, value, labels })
+  // Cap por métrica para prevenir DoS por agotamiento de memoria
+  if (tsPoints.length > 10_000) tsPoints.splice(0, tsPoints.length - 10_000)
 
   // ── Sesiones ──
   if (sessionId) {
@@ -766,7 +769,7 @@ export function getModels(from) {
  */
 export function saveSync() {
   try {
-    fs.mkdirSync(dataDir, { recursive: true })
+    fs.mkdirSync(dataDir, { recursive: true, mode: 0o700 })
 
     const data = {
       timeseries:      Array.from(state.timeseries.entries()),
@@ -779,7 +782,11 @@ export function saveSync() {
       startTime:       state.startTime
     }
 
-    fs.writeFileSync(dataFile, JSON.stringify(data))
+    fs.writeFileSync(dataFile, JSON.stringify(data), { mode: 0o600 })
+    // Forzar permisos en archivos ya existentes (mode en writeFileSync
+    // solo aplica al crear el archivo, no al sobreescribirlo)
+    try { fs.chmodSync(dataDir,  0o700) } catch {}
+    try { fs.chmodSync(dataFile, 0o600) } catch {}
   } catch (err) {
     console.error('[store] Error guardando datos en disco:', err.message)
   }
