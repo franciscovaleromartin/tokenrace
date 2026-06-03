@@ -12,6 +12,7 @@
 import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
+import { estimateCost } from './prices.js'
 
 // ─── Ruta de persistencia ───────────────────────────────────────────────────
 
@@ -516,7 +517,9 @@ export function getSummary(from) {
     tokensInput  += session.tokensInput
     tokensOutput += session.tokensOutput
     tokensCache  += session.tokensCache
-    cost         += session.cost
+    cost         += session.cost > 0
+      ? session.cost
+      : estimateCost(session.model, session.tokensInput, session.tokensOutput, session.tokensCache)
     activeTimeMs += session.durationActiveMs
     sessionSet.add(session.sessionId)
   }
@@ -612,7 +615,9 @@ export function getProjects(from) {
       const session = state.sessions.get(sessionId)
       if (!session || session.lastSeen < minTs) continue
       activeSessions.add(sessionId)
-      cost         += session.cost
+      cost         += session.cost > 0
+        ? session.cost
+        : estimateCost(session.model, session.tokensInput, session.tokensOutput, session.tokensCache)
       tokensInput  += session.tokensInput
       tokensOutput += session.tokensOutput
       tokensCache  += session.tokensCache
@@ -655,7 +660,10 @@ export function getSessions({ limit = 50, project = null } = {}) {
 
   return sessions.slice(0, limit).map(s => ({
     ...s,
-    project: resolveProject(s.sessionId, s.project)
+    project: resolveProject(s.sessionId, s.project),
+    cost: s.cost > 0
+      ? s.cost
+      : estimateCost(s.model, s.tokensInput, s.tokensOutput, s.tokensCache)
   }))
 }
 
@@ -749,15 +757,20 @@ export function getAgents() {
  */
 export function getModels(from) {
   return Array.from(state.models.entries())
-    .map(([model, stats]) => ({
-      model,
-      requests:     stats.requests,
-      tokensInput:  stats.tokensInput,
-      tokensOutput: stats.tokensOutput,
-      cost:         stats.cost,
-      avgLatencyMs: 0,
-      avgTtftMs:    0
-    }))
+    .map(([model, stats]) => {
+      const cost = stats.cost > 0
+        ? stats.cost
+        : estimateCost(model, stats.tokensInput, stats.tokensOutput)
+      return {
+        model,
+        requests:     stats.requests,
+        tokensInput:  stats.tokensInput,
+        tokensOutput: stats.tokensOutput,
+        cost,
+        avgLatencyMs: 0,
+        avgTtftMs:    0
+      }
+    })
     .sort((a, b) => b.cost - a.cost)
 }
 

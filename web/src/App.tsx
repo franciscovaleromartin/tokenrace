@@ -17,6 +17,7 @@ import { useTimeRange } from './hooks/useTimeRange'
 import { useMetrics } from './hooks/useMetrics'
 import { api } from './api'
 import { formatCost, formatNumber } from './utils/format'
+import { estimateCacheSavings } from './utils/prices'
 import type { TabId } from './types'
 
 export default function App() {
@@ -96,7 +97,7 @@ export default function App() {
                 </div>
                 <div className="bg-bg-card border border-bg-border rounded-lg p-4">
                   <div className="text-xs text-text-muted uppercase tracking-wider mb-1">Ahorro caché est.</div>
-                  <div className="text-2xl font-mono font-bold text-accent-yellow">{formatCost(summary.tokens.cache * 0.0000003)}</div>
+                  <div className="text-2xl font-mono font-bold text-accent-yellow">{formatCost(estimateCacheSavings(summary.tokens.cache))}</div>
                 </div>
               </div>
             )}
