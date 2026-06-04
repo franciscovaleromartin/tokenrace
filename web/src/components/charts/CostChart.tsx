@@ -1,5 +1,5 @@
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid,
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend,
   ResponsiveContainer
 } from 'recharts'
 import { api } from '../../api'
@@ -70,6 +70,11 @@ export function CostChart({ timeRange, sseVersion }: CostChartProps) {
             tickLine={false}
             axisLine={false}
             tickFormatter={(v: number) => `$${v.toFixed(2)}`}
+          />
+          <Legend
+            wrapperStyle={{ fontSize: 11, color: '#888888', paddingTop: 8 }}
+            iconType="square"
+            iconSize={8}
           />
           {projects.map((proj, i) => (
             <Bar
