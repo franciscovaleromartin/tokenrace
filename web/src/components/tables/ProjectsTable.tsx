@@ -52,8 +52,8 @@ export function ProjectsTable({ timeRange, sseVersion }: ProjectsTableProps) {
         ))}
       </div>
 
-      <div className="bg-bg-card border border-bg-border rounded-lg overflow-hidden">
-        <table className="w-full text-sm">
+      <div className="bg-bg-card border border-bg-border rounded-lg overflow-x-auto">
+        <table className="w-full text-sm min-w-[640px]">
           <thead>
             <tr className="border-b border-bg-border">
               <th className="text-left px-3 py-2 text-text-muted font-medium">Proyecto</th>
