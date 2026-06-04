@@ -1,5 +1,5 @@
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
+  BarChart, Bar, XAxis, YAxis, CartesianGrid,
   ResponsiveContainer
 } from 'recharts'
 import { api } from '../../api'
@@ -70,13 +70,6 @@ export function CostChart({ timeRange, sseVersion }: CostChartProps) {
             tickLine={false}
             axisLine={false}
             tickFormatter={(v: number) => `$${v.toFixed(2)}`}
-          />
-          <Tooltip
-            contentStyle={{ background: '#0d0d0d', border: '1px solid #1a1a1a', borderRadius: '6px' }}
-            labelStyle={{ color: '#888888', fontSize: 12 }}
-            formatter={(v: number, name: string) => [`$${v.toFixed(4)}`, name]}
-            itemSorter={(item) => -(item.value as number)}
-            cursor={{ fill: 'rgba(255,255,255,0.05)' }}
           />
           {projects.map((proj, i) => (
             <Bar
