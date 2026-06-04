@@ -16,6 +16,7 @@ export interface Summary {
   linesAdded: number
   linesRemoved: number
   efficiency: number
+  currentProject: string | null
 }
 
 export interface TimeseriesPoint {

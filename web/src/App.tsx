@@ -65,6 +65,12 @@ export default function App() {
 
         {activeTab === 'overview' && (
           <div className="flex flex-col gap-4">
+            {summary?.currentProject && (
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-text-muted uppercase tracking-wider">Proyecto</span>
+                <span className="text-lg font-semibold text-text-primary">{summary.currentProject}</span>
+              </div>
+            )}
             {summary && <StatsRow summary={summary} />}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               <TokensChart timeRange={timeRange} sseVersion={sseVersion} />

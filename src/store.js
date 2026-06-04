@@ -658,6 +658,19 @@ export function getSummary(from) {
 
   const efficiency = tokensInput > 0 ? tokensOutput / tokensInput : 0
 
+  // Proyecto más reciente con nombre asignado dentro del rango
+  let currentProject = null
+  let latestProjectTs = -1
+  for (const session of state.sessions.values()) {
+    if (state.ignoredSessions.has(session.sessionId)) continue
+    if (session.lastSeen < minTs) continue
+    const proj = resolveProject(session.sessionId, session.project)
+    if (proj && session.lastSeen > latestProjectTs) {
+      latestProjectTs = session.lastSeen
+      currentProject = proj
+    }
+  }
+
   return {
     tokens: { input: tokensInput, output: tokensOutput, cache: tokensCache },
     cost,
@@ -667,7 +680,8 @@ export function getSummary(from) {
     pullRequests,
     linesAdded,
     linesRemoved,
-    efficiency
+    efficiency,
+    currentProject
   }
 }
 
