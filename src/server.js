@@ -15,7 +15,8 @@ import express from 'express'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { parseMetrics, parseEvents, parseTraces } from './otlp-parser.js'
-import { processMetric, processEvent, processTrace, loadFromDisk, startAutoSave, saveSync } from './store.js'
+import { processMetric, processEvent, processTrace, loadFromDisk, startAutoSave, saveSync, drainAutoDetectQueue, labelSession } from './store.js'
+import { detectGitProject } from './git-detector.js'
 import { createRouter, broadcast } from './api-routes.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -39,6 +40,22 @@ export async function startServer({ port = 1337 } = {}) {
     next()
   })
 
+  // ── Auto-detección de proyecto vía git ─────────────────────────────────────
+
+  /**
+   * Drena la cola de sesiones sin proyecto y lanza detección git de forma async.
+   * Cuando detecta un nombre, etiqueta la sesión y notifica a los clientes SSE.
+   */
+  function runAutoDetect() {
+    for (const { sessionId, pathHint } of drainAutoDetectQueue()) {
+      detectGitProject(pathHint).then(result => {
+        if (!result) return
+        labelSession(sessionId, result.name)
+        broadcast('label_updated', { sessionId, project: result.name, auto: true })
+      }).catch(() => {})
+    }
+  }
+
   // ── Endpoints OTLP ──────────────────────────────────────────────────────────
 
   /**
@@ -51,6 +68,7 @@ export async function startServer({ port = 1337 } = {}) {
       processMetric(point)
     }
     broadcast('metrics', { count: points.length })
+    runAutoDetect()
     res.json({ partialSuccess: {} })
   })
 
@@ -64,6 +82,7 @@ export async function startServer({ port = 1337 } = {}) {
       const stored = processEvent(ev)
       broadcast('event', stored)
     }
+    runAutoDetect()
     res.json({ partialSuccess: {} })
   })
 
