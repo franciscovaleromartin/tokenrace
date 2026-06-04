@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { Header } from './components/layout/Header'
 import { TabBar } from './components/layout/TabBar'
 import { SetupGuide } from './components/setup/SetupGuide'
@@ -20,10 +20,56 @@ import { formatCost, formatNumber } from './utils/format'
 import { estimateCacheSavings } from './utils/prices'
 import type { TabId } from './types'
 
+interface ProjectSelectorProps {
+  autoDetected: string | null
+  userSelected: string | null
+  knownProjects: string[]
+  onChange: (project: string | null) => void
+}
+
+function ProjectSelector({ autoDetected, userSelected, knownProjects, onChange }: ProjectSelectorProps) {
+  const effective = userSelected ?? autoDetected
+  if (!effective && knownProjects.length === 0) return null
+
+  // Opciones únicas: proyectos conocidos + el efectivo si no está en la lista
+  const options = [...new Set([...knownProjects, ...(effective ? [effective] : [])])]
+  if (options.length === 0) return null
+
+  return (
+    <div className="flex items-center gap-2">
+      <span className="text-xs text-text-muted uppercase tracking-wider">Proyecto</span>
+      <select
+        value={effective ?? ''}
+        onChange={e => onChange(e.target.value || null)}
+        className="bg-bg-card border border-bg-border rounded px-2 py-0.5 text-lg font-semibold text-text-primary outline-none focus:border-accent-green cursor-pointer"
+      >
+        {options.map(p => (
+          <option key={p} value={p}>{p}</option>
+        ))}
+      </select>
+      {userSelected && userSelected !== autoDetected && (
+        <button
+          onClick={() => onChange(null)}
+          className="text-xs text-text-muted hover:text-text-secondary transition-colors"
+          title="Volver al proyecto auto-detectado"
+        >
+          ↩ auto
+        </button>
+      )}
+    </div>
+  )
+}
+
 export default function App() {
   const [activeTab, setActiveTab] = useState<TabId>('overview')
   const { timeRange, setTimeRange } = useTimeRange()
   const { status, summary, refetch, sseVersion } = useMetrics(timeRange)
+  const [userSelectedProject, setUserSelectedProject] = useState<string | null>(null)
+  const [knownProjects, setKnownProjects] = useState<string[]>([])
+
+  useEffect(() => {
+    api.projects().then(ps => setKnownProjects(ps.map(p => p.project))).catch(() => {})
+  }, [sseVersion])
 
   const handleReset = useCallback(async () => {
     await api.reset()
@@ -65,12 +111,12 @@ export default function App() {
 
         {activeTab === 'overview' && (
           <div className="flex flex-col gap-4">
-            {summary?.currentProject && (
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-text-muted uppercase tracking-wider">Proyecto</span>
-                <span className="text-lg font-semibold text-text-primary">{summary.currentProject}</span>
-              </div>
-            )}
+            <ProjectSelector
+              autoDetected={summary?.currentProject ?? null}
+              userSelected={userSelectedProject}
+              knownProjects={knownProjects}
+              onChange={setUserSelectedProject}
+            />
             {summary && <StatsRow summary={summary} />}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               <TokensChart timeRange={timeRange} sseVersion={sseVersion} />

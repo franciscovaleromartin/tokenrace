@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Check, X } from 'lucide-react'
 import { api } from '../../api'
+import { useSSE } from '../../hooks/useSSE'
 import type { UnlabeledSession } from '../../types'
 
 interface SessionLabelNotificationProps {
@@ -32,13 +33,17 @@ export function SessionLabelNotification({ onLabeled }: SessionLabelNotification
         api.unlabeledSessions(),
         api.projects().catch(() => [] as Awaited<ReturnType<typeof api.projects>>),
       ])
-      // Solo añadir sesiones nuevas que no estén ya en notifs
       setNotifs(prev => {
-        const existingIds = new Set(prev.map(n => n.session.sessionId))
+        const unlabeledIds = new Set(unlabeled.map(s => s.sessionId))
+        // Quitar notifs pendientes cuya sesión ya fue etiquetada (ej. por auto-detección)
+        const filtered = prev.filter(n =>
+          n.status !== 'pending' || unlabeledIds.has(n.session.sessionId)
+        )
+        const existingIds = new Set(filtered.map(n => n.session.sessionId))
         const newOnes = unlabeled
           .filter(s => !existingIds.has(s.sessionId))
           .map(s => ({ session: s, status: 'pending' as const }))
-        return [...prev, ...newOnes]
+        return [...filtered, ...newOnes]
       })
       setKnownProjects(
         [...projects]
@@ -55,6 +60,16 @@ export function SessionLabelNotification({ onLabeled }: SessionLabelNotification
     const interval = setInterval(load, 10_000) // refrescar cada 10s
     return () => clearInterval(interval)
   }, [load])
+
+  // Eliminar inmediatamente cuando el servidor confirma una sesión etiquetada
+  useSSE(useCallback((type, payload) => {
+    if (type === 'label_updated') {
+      const { sessionId } = payload as { sessionId: string }
+      setNotifs(prev => prev.filter(n =>
+        n.session.sessionId !== sessionId || n.status !== 'pending'
+      ))
+    }
+  }, []))
 
   async function labelSession(sessionId: string, project: string) {
     await api.labelSession(sessionId, project).catch(() => {})
