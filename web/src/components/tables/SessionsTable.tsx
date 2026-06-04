@@ -52,8 +52,9 @@ export function SessionsTable({ timeRange, sseVersion }: SessionsTableProps) {
   }
 
   return (
-    <div className="bg-bg-card border border-bg-border rounded-lg overflow-x-auto">
-      <table className="w-full text-sm min-w-[720px]">
+    <div className="bg-bg-card border border-bg-border rounded-lg">
+      <div className="overflow-x-auto">
+      <table className="w-full text-sm min-w-[720px] whitespace-nowrap">
         <thead>
           <tr className="border-b border-bg-border">
             <th className="w-6 px-3 py-2" />
@@ -134,6 +135,7 @@ export function SessionsTable({ timeRange, sseVersion }: SessionsTableProps) {
           ))}
         </tbody>
       </table>
+      </div>
     </div>
   )
 }
