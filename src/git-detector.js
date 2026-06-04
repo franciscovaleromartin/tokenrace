@@ -10,6 +10,7 @@
 
 import { execFile } from 'node:child_process'
 import path from 'node:path'
+import os from 'node:os'
 import fs from 'node:fs'
 
 function git(args, cwd) {
@@ -58,4 +59,60 @@ export async function detectGitProject(pathHint) {
   } catch {
     return null
   }
+}
+
+/**
+ * Detecta el proyecto de una sesión leyendo los archivos JSONL de Claude Code en
+ * ~/.claude/projects/<ruta-encodificada>/<sessionId>.jsonl.
+ * Lee las primeras líneas hasta encontrar el campo `cwd`, luego usa detectGitProject.
+ *
+ * Acoplado al formato de disco de Claude Code: si Claude Code cambia su esquema,
+ * esta función dejará de funcionar silenciosamente (retorna null).
+ *
+ * @param {string} sessionId - UUID de la sesión
+ * @returns {Promise<{ name: string, remote: string|null }|null>}
+ */
+export async function detectProjectBySessionId(sessionId) {
+  if (!sessionId) return null
+
+  const projectsDir = path.join(os.homedir(), '.claude', 'projects')
+
+  let dirs
+  try {
+    dirs = fs.readdirSync(projectsDir)
+  } catch {
+    return null
+  }
+
+  for (const dir of dirs) {
+    const sessionFile = path.join(projectsDir, dir, `${sessionId}.jsonl`)
+    try {
+      fs.statSync(sessionFile)
+    } catch {
+      continue // no existe en este directorio
+    }
+
+    // Buscar campo `cwd` en las primeras 10 líneas del transcript
+    let cwd = null
+    try {
+      const content = fs.readFileSync(sessionFile, 'utf8')
+      for (const line of content.split('\n').slice(0, 10)) {
+        if (!line.trim()) continue
+        try {
+          const record = JSON.parse(line)
+          if (typeof record.cwd === 'string' && record.cwd) {
+            cwd = record.cwd
+            break
+          }
+        } catch { /* línea no es JSON válido */ }
+      }
+    } catch {
+      return null
+    }
+
+    if (cwd) return detectGitProject(cwd)
+    return null
+  }
+
+  return null
 }

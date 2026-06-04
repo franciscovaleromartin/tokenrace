@@ -16,7 +16,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { parseMetrics, parseEvents, parseTraces } from './otlp-parser.js'
 import { processMetric, processEvent, processTrace, loadFromDisk, startAutoSave, saveSync, drainAutoDetectQueue, labelSession } from './store.js'
-import { detectGitProject } from './git-detector.js'
+import { detectProjectBySessionId } from './git-detector.js'
 import { createRouter, broadcast } from './api-routes.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -47,8 +47,8 @@ export async function startServer({ port = 1337 } = {}) {
    * Cuando detecta un nombre, etiqueta la sesión y notifica a los clientes SSE.
    */
   function runAutoDetect() {
-    for (const { sessionId, pathHint } of drainAutoDetectQueue()) {
-      detectGitProject(pathHint).then(result => {
+    for (const { sessionId } of drainAutoDetectQueue()) {
+      detectProjectBySessionId(sessionId).then(result => {
         if (!result) return
         labelSession(sessionId, result.name)
         broadcast('label_updated', { sessionId, project: result.name, auto: true })

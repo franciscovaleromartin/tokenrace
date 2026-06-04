@@ -16,19 +16,19 @@ import { estimateCost } from './prices.js'
 
 // ─── Cola de auto-detección de proyecto vía git ──────────────────────────────
 
-const _pendingAutoDetect  = []   // { sessionId, pathHint }[]
+const _pendingAutoDetect  = []   // { sessionId }[]
 const _autoDetectQueued   = new Set() // sessionIds con detección en cola ahora mismo
 
 /**
- * Encola una sesión sin proyecto para auto-detección por git.
+ * Encola una sesión sin proyecto para auto-detección leyendo ~/.claude/projects/.
  * No re-encola si ya está en cola o si la sesión ya tiene proyecto.
  */
-function maybeQueueAutoDetect(sessionId, pathHint) {
-  if (!pathHint || _autoDetectQueued.has(sessionId)) return
+function maybeQueueAutoDetect(sessionId) {
+  if (_autoDetectQueued.has(sessionId)) return
   const session = state.sessions.get(sessionId)
   if (!session || resolveProject(sessionId, session.project) !== null) return
   _autoDetectQueued.add(sessionId)
-  _pendingAutoDetect.push({ sessionId, pathHint })
+  _pendingAutoDetect.push({ sessionId })
 }
 
 /**
@@ -279,13 +279,9 @@ export function processMetric(raw) {
     session.lastSeen = Math.max(session.lastSeen, timestamp)
     if (model && !session.model) session.model = model
 
-    // Capturar directorio de trabajo para auto-detección de proyecto
-    if (!session.cwd) {
-      const cwd = labels['process.cwd'] ?? labels['cwd'] ?? labels['working_directory'] ?? null
-      if (cwd) {
-        session.cwd = cwd
-        maybeQueueAutoDetect(sessionId, cwd)
-      }
+    // Encolar auto-detección si la sesión aún no tiene proyecto
+    if (resolveProject(sessionId, session.project) === null) {
+      maybeQueueAutoDetect(sessionId)
     }
 
     switch (name) {
@@ -385,7 +381,6 @@ export function processEvent({ eventName, timestamp, severity, attributes }) {
       feature:          attributes.feature ?? null,
       model,
       startTime:        timestamp,
-      cwd:              attributes['process.cwd'] ?? attributes['cwd'] ?? attributes['working_directory'] ?? null,
       lastSeen:         timestamp,
       durationActiveMs: 0,
       tokensInput:      0,
@@ -402,23 +397,9 @@ export function processEvent({ eventName, timestamp, severity, attributes }) {
     session.lastSeen = Math.max(session.lastSeen, timestamp)
     if (model && !session.model) session.model = model
 
-    // Capturar directorio de trabajo para auto-detección de proyecto
-    if (!session.cwd) {
-      const cwd = attributes['process.cwd'] ?? attributes['cwd'] ?? attributes['working_directory'] ?? null
-      if (cwd) {
-        session.cwd = cwd
-        maybeQueueAutoDetect(sessionId, cwd)
-      } else if (eventName === 'tool_use') {
-        // Fallback: deducir cwd desde paths de ficheros usados por herramientas
-        const filePath = attributes['tool.input.file_path']
-          ?? attributes['tool.input.path']
-          ?? attributes['file_path']
-          ?? null
-        if (filePath && filePath.startsWith('/')) {
-          session.cwd = path.dirname(filePath)
-          maybeQueueAutoDetect(sessionId, session.cwd)
-        }
-      }
+    // Encolar auto-detección si la sesión aún no tiene proyecto
+    if (resolveProject(sessionId, session.project) === null) {
+      maybeQueueAutoDetect(sessionId)
     }
 
     // ── Tiempo activo desde eventos api_request (duration_ms) ──
