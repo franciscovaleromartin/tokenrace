@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { Header } from './components/layout/Header'
 import { TabBar } from './components/layout/TabBar'
 import { SetupGuide } from './components/setup/SetupGuide'
@@ -15,6 +15,7 @@ import { EventsFeed } from './components/events/EventsFeed'
 import { AgentsTree } from './components/agents/AgentsTree'
 import { useTimeRange } from './hooks/useTimeRange'
 import { useMetrics } from './hooks/useMetrics'
+import { api } from './api'
 import { formatCost, formatNumber } from './utils/format'
 import { estimateCacheSavings } from './utils/prices'
 import type { TabId } from './types'
@@ -22,7 +23,12 @@ import type { TabId } from './types'
 export default function App() {
   const [activeTab, setActiveTab] = useState<TabId>('overview')
   const { timeRange, setTimeRange } = useTimeRange()
-  const { status, summary, sseVersion } = useMetrics(timeRange)
+  const { status, summary, refetch, sseVersion } = useMetrics(timeRange)
+
+  const handleReset = useCallback(async () => {
+    await api.reset()
+    refetch()
+  }, [refetch])
 
   // Si nunca han llegado datos, mostrar SetupGuide
   if (!status.connected && status.totalEvents === 0) {
@@ -33,6 +39,7 @@ export default function App() {
           onTimeRangeChange={setTimeRange}
           connected={false}
           lastSeen={null}
+          onReset={handleReset}
         />
         <SetupGuide />
       </div>
@@ -46,10 +53,11 @@ export default function App() {
         onTimeRangeChange={setTimeRange}
         connected={status.connected}
         lastSeen={status.lastSeen}
+        onReset={handleReset}
       />
 
       {/* Zona de notificaciones — solo aparece si hay sesiones sin etiquetar */}
-      <SessionLabelNotification onLabeled={() => {}} />
+      <SessionLabelNotification onLabeled={refetch} />
 
       <TabBar activeTab={activeTab} onTabChange={setActiveTab} />
 
