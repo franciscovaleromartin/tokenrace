@@ -76,6 +76,7 @@ export function CostChart({ timeRange, sseVersion }: CostChartProps) {
             labelStyle={{ color: '#888888', fontSize: 12 }}
             formatter={(v: number, name: string) => [`$${v.toFixed(4)}`, name]}
             itemSorter={(item) => -(item.value as number)}
+            cursor={{ fill: 'rgba(255,255,255,0.05)' }}
           />
           {projects.length > 1 && (
             <Legend
