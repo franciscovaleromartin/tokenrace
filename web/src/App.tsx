@@ -27,34 +27,76 @@ interface ProjectSelectorProps {
   onChange: (project: string | null) => void
 }
 
+const NEW_PROJECT_SENTINEL = '__new__'
+
 function ProjectSelector({ autoDetected, userSelected, knownProjects, onChange }: ProjectSelectorProps) {
+  const [creatingNew, setCreatingNew] = useState(false)
+  const [newName, setNewName] = useState('')
+
   const effective = userSelected ?? autoDetected
   if (!effective && knownProjects.length === 0) return null
 
-  // Opciones únicas: proyectos conocidos + el efectivo si no está en la lista
   const options = [...new Set([...knownProjects, ...(effective ? [effective] : [])])]
   if (options.length === 0) return null
+
+  function handleSelectChange(e: React.ChangeEvent<HTMLSelectElement>) {
+    if (e.target.value === NEW_PROJECT_SENTINEL) {
+      setCreatingNew(true)
+      setNewName('')
+    } else {
+      onChange(e.target.value || null)
+    }
+  }
+
+  function confirmNew() {
+    const name = newName.trim()
+    if (name) onChange(name)
+    setCreatingNew(false)
+    setNewName('')
+  }
 
   return (
     <div className="flex items-center gap-2">
       <span className="text-xs text-text-muted uppercase tracking-wider">Proyecto</span>
-      <select
-        value={effective ?? ''}
-        onChange={e => onChange(e.target.value || null)}
-        className="bg-bg-card border border-bg-border rounded px-2 py-0.5 text-lg font-semibold text-text-primary outline-none focus:border-accent-green cursor-pointer"
-      >
-        {options.map(p => (
-          <option key={p} value={p}>{p}</option>
-        ))}
-      </select>
-      {userSelected && userSelected !== autoDetected && (
-        <button
-          onClick={() => onChange(null)}
-          className="text-xs text-text-muted hover:text-text-secondary transition-colors"
-          title="Volver al proyecto auto-detectado"
-        >
-          ↩ auto
-        </button>
+      {creatingNew ? (
+        <>
+          <input
+            autoFocus
+            value={newName}
+            onChange={e => setNewName(e.target.value)}
+            onKeyDown={e => {
+              if (e.key === 'Enter') confirmNew()
+              if (e.key === 'Escape') { setCreatingNew(false); setNewName('') }
+            }}
+            placeholder="nombre del proyecto"
+            className="bg-bg-base border border-bg-border rounded px-2 py-0.5 text-lg font-semibold text-text-primary outline-none focus:border-accent-green w-44"
+          />
+          <button onClick={confirmNew} className="text-xs text-accent-green hover:opacity-80 transition-opacity">✓</button>
+          <button onClick={() => { setCreatingNew(false); setNewName('') }} className="text-xs text-text-muted hover:text-accent-orange transition-colors">✕</button>
+        </>
+      ) : (
+        <>
+          <select
+            value={effective ?? ''}
+            onChange={handleSelectChange}
+            className="bg-bg-card border border-bg-border rounded px-2 py-0.5 text-lg font-semibold text-text-primary outline-none focus:border-accent-green cursor-pointer"
+          >
+            {options.map(p => (
+              <option key={p} value={p}>{p}</option>
+            ))}
+            <option disabled>──────────</option>
+            <option value={NEW_PROJECT_SENTINEL}>+ Nuevo proyecto</option>
+          </select>
+          {userSelected && userSelected !== autoDetected && (
+            <button
+              onClick={() => onChange(null)}
+              className="text-xs text-text-muted hover:text-text-secondary transition-colors"
+              title="Volver al proyecto auto-detectado"
+            >
+              ↩ auto
+            </button>
+          )}
+        </>
       )}
     </div>
   )
