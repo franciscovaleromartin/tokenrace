@@ -554,17 +554,29 @@ export function getSummary(from) {
   let activeTimeMs  = 0
   const sessionSet  = new Set()
 
+  // Coste desde timeseries: filtrado por timestamp exacto, sin doble conteo
+  const sessionsWithCost = new Set()
+  for (const point of state.timeseries.get('claude_code.cost') ?? []) {
+    if (point.ts < minTs) continue
+    const sid = point.labels['session.id']
+    if (sid && state.ignoredSessions.has(sid)) continue
+    cost += point.value
+    if (sid) sessionsWithCost.add(sid)
+  }
+
   for (const session of state.sessions.values()) {
     if (state.ignoredSessions.has(session.sessionId)) continue
     if (session.lastSeen < minTs) continue
     tokensInput  += session.tokensInput
     tokensOutput += session.tokensOutput
     tokensCache  += session.tokensCache
-    cost         += session.cost > 0
-      ? session.cost
-      : estimateCost(session.model, session.tokensInput, session.tokensOutput, session.tokensCache)
     activeTimeMs += session.durationActiveMs
     sessionSet.add(session.sessionId)
+
+    // Estimar solo si no llegaron métricas de coste reales para esta sesión
+    if (!sessionsWithCost.has(session.sessionId)) {
+      cost += estimateCost(session.model, session.tokensInput, session.tokensOutput, session.tokensCache)
+    }
   }
 
   // Commits, PRs y líneas desde timeseries
@@ -650,20 +662,37 @@ export function getProjects(from) {
     }
   }
 
+  // Coste por proyecto desde timeseries (filtrado por timestamp)
+  const projectCostTs  = new Map() // projectName → cost acumulado en timeseries
+  const sessionHasCost = new Set() // sessionIds con coste real en el rango
+
+  for (const point of state.timeseries.get('claude_code.cost') ?? []) {
+    if (point.ts < minTs) continue
+    const sid = point.labels['session.id']
+    if (sid && state.ignoredSessions.has(sid)) continue
+    const proj = resolveProject(sid, point.labels.project)
+    if (!proj) continue
+    projectCostTs.set(proj, (projectCostTs.get(proj) ?? 0) + point.value)
+    if (sid) sessionHasCost.add(sid)
+  }
+
   for (const [project, proj] of state.projects.entries()) {
     const activeSessions = new Set()
-    let cost = 0, tokensInput = 0, tokensOutput = 0, tokensCache = 0
+    let cost = projectCostTs.get(project) ?? 0
+    let tokensInput = 0, tokensOutput = 0, tokensCache = 0
 
     for (const sessionId of proj.sessions) {
       const session = state.sessions.get(sessionId)
       if (!session || session.lastSeen < minTs) continue
       activeSessions.add(sessionId)
-      cost         += session.cost > 0
-        ? session.cost
-        : estimateCost(session.model, session.tokensInput, session.tokensOutput, session.tokensCache)
       tokensInput  += session.tokensInput
       tokensOutput += session.tokensOutput
       tokensCache  += session.tokensCache
+
+      // Estimar solo si no llegaron métricas de coste reales para esta sesión
+      if (!sessionHasCost.has(sessionId)) {
+        cost += estimateCost(session.model, session.tokensInput, session.tokensOutput, session.tokensCache)
+      }
     }
 
     if (activeSessions.size === 0 && minTs > 0) continue
@@ -828,14 +857,15 @@ export function saveSync() {
     fs.mkdirSync(dataDir, { recursive: true, mode: 0o700 })
 
     const data = {
-      timeseries:      Array.from(state.timeseries.entries()),
-      sessions:        Array.from(state.sessions.values()),
-      sessionMappings: Array.from(state.sessionMappings.entries()),
-      ignoredSessions: Array.from(state.ignoredSessions),
-      events:          state.events,
-      eventIndex:      state.eventIndex,
-      totalEvents:     state.totalEvents,
-      startTime:       state.startTime
+      timeseries:       Array.from(state.timeseries.entries()),
+      sessions:         Array.from(state.sessions.values()),
+      sessionMappings:  Array.from(state.sessionMappings.entries()),
+      ignoredSessions:  Array.from(state.ignoredSessions),
+      cumulativeValues: Array.from(state.cumulativeValues.entries()),
+      events:           state.events,
+      eventIndex:       state.eventIndex,
+      totalEvents:      state.totalEvents,
+      startTime:        state.startTime
     }
 
     fs.writeFileSync(dataFile, JSON.stringify(data), { mode: 0o600 })
@@ -882,6 +912,13 @@ export function loadFromDisk() {
     if (Array.isArray(data.ignoredSessions)) {
       for (const id of data.ignoredSessions) {
         state.ignoredSessions.add(id)
+      }
+    }
+
+    // Restaurar baselines de métricas cumulativas (evita doble conteo al reiniciar)
+    if (Array.isArray(data.cumulativeValues)) {
+      for (const [k, v] of data.cumulativeValues) {
+        state.cumulativeValues.set(k, v)
       }
     }
 
