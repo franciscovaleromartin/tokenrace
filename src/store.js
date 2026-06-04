@@ -694,6 +694,36 @@ export function getTimeseries(metric, from, bucket) {
  * Proyectos con sus métricas agregadas filtradas por rango temporal.
  * @param {string} from
  */
+/**
+ * Serie temporal de una métrica desglosada por proyecto.
+ * Devuelve [{ timestamp, projects: { [projectName]: value } }]
+ */
+export function getTimeseriesByProject(metric, from, bucket) {
+  const minTs    = parseTimeRange(from)
+  const bucketMs = parseBucket(bucket)
+  const points   = state.timeseries.get(metric) ?? []
+
+  // Map: bucketKey → Map<projectName, value>
+  const buckets = new Map()
+  for (const point of points) {
+    if (point.ts < minTs) continue
+    const sid = point.labels['session.id']
+    if (sid && state.ignoredSessions.has(sid)) continue
+    const proj = resolveProject(sid, point.labels.project) ?? '(sin proyecto)'
+    const key  = Math.floor(point.ts / bucketMs) * bucketMs
+    if (!buckets.has(key)) buckets.set(key, new Map())
+    const byProj = buckets.get(key)
+    byProj.set(proj, (byProj.get(proj) ?? 0) + point.value)
+  }
+
+  return Array.from(buckets.entries())
+    .map(([timestamp, byProj]) => ({
+      timestamp,
+      projects: Object.fromEntries(byProj),
+    }))
+    .sort((a, b) => a.timestamp - b.timestamp)
+}
+
 export function getProjects(from) {
   const minTs  = parseTimeRange(from)
   const result = []

@@ -11,7 +11,7 @@
 
 import { Router } from 'express'
 import {
-  getStatus, getSummary, getTimeseries, getProjects,
+  getStatus, getSummary, getTimeseries, getTimeseriesByProject, getProjects,
   getSessions, getUnlabeledSessions, getSessionEvents,
   getEvents, getTools, getAgents, getModels,
   labelSession, ignoreSession, reset, resetProject
@@ -112,6 +112,11 @@ export function createRouter({ port = 1337 } = {}) {
   /** GET /api/timeseries — serie temporal, acepta ?metric, ?from, ?bucket */
   router.get('/api/timeseries', (req, res) => {
     res.json(getTimeseries(req.query.metric, req.query.from, req.query.bucket))
+  })
+
+  /** GET /api/timeseries/by-project — serie temporal desglosada por proyecto, acepta ?metric, ?from, ?bucket */
+  router.get('/api/timeseries/by-project', (req, res) => {
+    res.json(getTimeseriesByProject(req.query.metric, req.query.from, req.query.bucket))
   })
 
   /** GET /api/projects — proyectos con métricas, acepta ?from */

@@ -1,5 +1,5 @@
 import type {
-  Status, Summary, TimeseriesPoint, Session, UnlabeledSession,
+  Status, Summary, TimeseriesPoint, TimeseriesByProjectPoint, Session, UnlabeledSession,
   Project, ToolsData, Event, Agent, ModelStats
 } from './types'
 
@@ -22,6 +22,13 @@ export const api = {
     if (from) params.set('from', from)
     if (bucket) params.set('bucket', bucket)
     return get<TimeseriesPoint[]>(`/api/timeseries?${params}`)
+  },
+
+  timeseriesByProject: (metric: string, from?: string, bucket?: string) => {
+    const params = new URLSearchParams({ metric })
+    if (from) params.set('from', from)
+    if (bucket) params.set('bucket', bucket)
+    return get<TimeseriesByProjectPoint[]>(`/api/timeseries/by-project?${params}`)
   },
 
   projects: (from?: string) =>

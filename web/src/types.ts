@@ -24,6 +24,11 @@ export interface TimeseriesPoint {
   value: number
 }
 
+export interface TimeseriesByProjectPoint {
+  timestamp: number
+  projects: Record<string, number>
+}
+
 export interface Session {
   sessionId: string
   project: string | null
