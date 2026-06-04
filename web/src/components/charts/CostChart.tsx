@@ -1,6 +1,6 @@
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer, Legend
+  ResponsiveContainer
 } from 'recharts'
 import { api } from '../../api'
 import { useState, useEffect, useMemo } from 'react'
@@ -78,13 +78,6 @@ export function CostChart({ timeRange, sseVersion }: CostChartProps) {
             itemSorter={(item) => -(item.value as number)}
             cursor={{ fill: 'rgba(255,255,255,0.05)' }}
           />
-          {projects.length > 1 && (
-            <Legend
-              wrapperStyle={{ fontSize: 11, color: '#888888', paddingTop: 8 }}
-              iconType="square"
-              iconSize={8}
-            />
-          )}
           {projects.map((proj, i) => (
             <Bar
               key={proj}
