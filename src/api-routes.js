@@ -14,7 +14,7 @@ import {
   getStatus, getSummary, getTimeseries, getProjects,
   getSessions, getUnlabeledSessions, getSessionEvents,
   getEvents, getTools, getAgents, getModels,
-  labelSession, ignoreSession, reset
+  labelSession, ignoreSession, reset, resetProject
 } from './store.js'
 
 // ─── Clientes SSE activos ────────────────────────────────────────────────────
@@ -191,6 +191,14 @@ export function createRouter({ port = 1337 } = {}) {
   /** POST /api/reset — resetea todo el estado en memoria */
   router.post('/api/reset', requireSafeOrigin, (req, res) => {
     reset()
+    res.json({ ok: true })
+  })
+
+  /** POST /api/projects/:project/reset — resetea los datos de un proyecto */
+  router.post('/api/projects/:project/reset', requireSafeOrigin, (req, res) => {
+    const projectName = decodeURIComponent(req.params.project)
+    resetProject(projectName)
+    broadcast('project_reset', { project: projectName })
     res.json({ ok: true })
   })
 

@@ -62,4 +62,7 @@ export const api = {
 
   reset: () =>
     fetch('/api/reset', { method: 'POST' }).then(r => r.json()),
+
+  resetProject: (project: string) =>
+    fetch(`/api/projects/${encodeURIComponent(project)}/reset`, { method: 'POST' }).then(r => r.json()),
 }

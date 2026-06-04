@@ -1,4 +1,3 @@
-import { RefreshCw } from 'lucide-react'
 import type { TimeRange } from '../../types'
 
 interface HeaderProps {
@@ -6,7 +5,6 @@ interface HeaderProps {
   onTimeRangeChange: (range: TimeRange) => void
   connected: boolean
   lastSeen: number | null
-  onReset: () => void
 }
 
 const TIME_RANGES: { label: string; value: TimeRange }[] = [
@@ -25,7 +23,7 @@ function timeSince(ts: number | null): string {
   return `hace ${Math.floor(diff / 86_400_000)}d`
 }
 
-export function Header({ timeRange, onTimeRangeChange, connected, lastSeen, onReset }: HeaderProps) {
+export function Header({ timeRange, onTimeRangeChange, connected, lastSeen }: HeaderProps) {
   return (
     <header className="h-10 flex items-center justify-between px-4 border-b border-bg-border bg-bg-base sticky top-0 z-50">
       {/* Logo */}
@@ -64,15 +62,6 @@ export function Header({ timeRange, onTimeRangeChange, connected, lastSeen, onRe
           ))}
         </div>
 
-        {/* Reset */}
-        <button
-          onClick={onReset}
-          title="Resetear datos"
-          className="flex items-center gap-1 px-2 py-1 rounded text-xs text-text-secondary hover:text-accent-orange hover:bg-bg-card transition-colors"
-        >
-          <RefreshCw size={12} />
-          <span>Reset</span>
-        </button>
       </div>
     </header>
   )

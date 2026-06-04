@@ -478,6 +478,49 @@ export function reset() {
   saveSync()
 }
 
+/**
+ * Resetea los datos de un proyecto concreto eliminando sus sesiones y sus
+ * puntos de timeseries, eventos y entradas cumulativas asociadas.
+ * @param {string} projectName
+ */
+export function resetProject(projectName) {
+  // Recoger los sessionIds del proyecto
+  const sessionIds = new Set()
+  for (const session of state.sessions.values()) {
+    if (resolveProject(session.sessionId, session.project) === projectName) {
+      sessionIds.add(session.sessionId)
+    }
+  }
+
+  // Eliminar sesiones y sus entradas auxiliares
+  for (const sid of sessionIds) {
+    state.sessions.delete(sid)
+    state.sessionMappings.delete(sid)
+    state.ignoredSessions.delete(sid)
+
+    // Limpiar baselines de métricas cumulativas para esta sesión
+    for (const key of state.cumulativeValues.keys()) {
+      if (key.includes(`:${sid}:`)) state.cumulativeValues.delete(key)
+    }
+  }
+
+  // Filtrar timeseries: eliminar puntos de las sesiones del proyecto
+  for (const [metric, points] of state.timeseries.entries()) {
+    const filtered = points.filter(p => !sessionIds.has(p.labels['session.id']))
+    if (filtered.length !== points.length) state.timeseries.set(metric, filtered)
+  }
+
+  // Filtrar buffer de eventos
+  const remaining = state.events.filter(e => !sessionIds.has(e.sessionId))
+  state.events.length = 0
+  state.events.push(...remaining)
+
+  // Eliminar el proyecto del mapa
+  state.projects.delete(projectName)
+
+  scheduleSave()
+}
+
 // ─── Getters ─────────────────────────────────────────────────────────────────
 
 /**

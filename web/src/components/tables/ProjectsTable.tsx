@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
+import { Trash2 } from 'lucide-react'
 import { api } from '../../api'
 import { formatNumber, formatCost } from '../../utils/format'
 import type { Project, TimeRange } from '../../types'
@@ -10,10 +11,24 @@ interface ProjectsTableProps {
 
 export function ProjectsTable({ timeRange, sseVersion }: ProjectsTableProps) {
   const [projects, setProjects] = useState<Project[]>([])
+  const [resetting, setResetting] = useState<string | null>(null)
 
-  useEffect(() => {
+  const load = useCallback(() => {
     api.projects(timeRange).then(setProjects).catch(() => {})
-  }, [timeRange, sseVersion])
+  }, [timeRange])
+
+  useEffect(() => { load() }, [load, sseVersion])
+
+  const handleReset = async (project: string) => {
+    if (!confirm(`¿Resetear todos los datos del proyecto "${project}"?`)) return
+    setResetting(project)
+    try {
+      await api.resetProject(project)
+      load()
+    } finally {
+      setResetting(null)
+    }
+  }
 
   if (projects.length === 0) {
     return <div className="text-text-muted text-sm p-4">Sin proyectos registrados</div>
@@ -49,6 +64,7 @@ export function ProjectsTable({ timeRange, sseVersion }: ProjectsTableProps) {
               <th className="text-right px-3 py-2 text-text-muted font-medium">Coste</th>
               <th className="text-right px-3 py-2 text-text-muted font-medium">Commits</th>
               <th className="text-right px-3 py-2 text-text-muted font-medium">LOC +/-</th>
+              <th className="px-3 py-2" />
             </tr>
           </thead>
           <tbody>
@@ -65,6 +81,16 @@ export function ProjectsTable({ timeRange, sseVersion }: ProjectsTableProps) {
                   <span className="text-accent-green">+{p.linesAdded}</span>
                   <span className="text-text-muted"> / </span>
                   <span className="text-accent-orange">-{p.linesRemoved}</span>
+                </td>
+                <td className="px-3 py-2 text-right">
+                  <button
+                    onClick={() => handleReset(p.project)}
+                    disabled={resetting === p.project}
+                    title="Resetear proyecto"
+                    className="p-1 rounded text-text-muted hover:text-accent-orange hover:bg-bg-base transition-colors disabled:opacity-40"
+                  >
+                    <Trash2 size={13} />
+                  </button>
                 </td>
               </tr>
             ))}
