@@ -1,6 +1,6 @@
 {
   "name": "tokenrace",
-  "version": "0.1.14",
+  "version": "0.1.15",
   "description": "Monitor en tiempo real para Claude Code",
   "bin": {
     "tokenrace": "bin/cli.js"
