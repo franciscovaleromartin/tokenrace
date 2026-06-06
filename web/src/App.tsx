@@ -18,7 +18,7 @@ import { useMetrics } from './hooks/useMetrics'
 import { api } from './api'
 import { formatCost, formatNumber } from './utils/format'
 import { estimateCacheSavings } from './utils/prices'
-import type { TabId } from './types'
+import type { TabId, Project } from './types'
 
 interface ProjectSelectorProps {
   autoDetected: string | null
@@ -108,10 +108,14 @@ export default function App() {
   const { status, summary, refetch, sseVersion } = useMetrics(timeRange)
   const [userSelectedProject, setUserSelectedProject] = useState<string | null>(null)
   const [knownProjects, setKnownProjects] = useState<string[]>([])
+  const [projectsData, setProjectsData] = useState<Project[]>([])
 
   useEffect(() => {
-    api.projects().then(ps => setKnownProjects(ps.map(p => p.project))).catch(() => {})
-  }, [sseVersion])
+    api.projects(timeRange).then(ps => {
+      setKnownProjects(ps.map(p => p.project))
+      setProjectsData(ps)
+    }).catch(() => {})
+  }, [sseVersion, timeRange])
 
   const handleReset = useCallback(async () => {
     await api.reset()
@@ -133,6 +137,9 @@ export default function App() {
       </div>
     )
   }
+
+  const effectiveProject = userSelectedProject ?? summary?.currentProject ?? null
+  const selectedProjectData = projectsData.find(p => p.project === effectiveProject) ?? null
 
   return (
     <div className="min-h-screen bg-bg-base text-text-primary flex flex-col">
@@ -159,7 +166,7 @@ export default function App() {
               knownProjects={knownProjects}
               onChange={setUserSelectedProject}
             />
-            {summary && <StatsRow summary={summary} />}
+            {summary && <StatsRow summary={summary} selectedProjectData={selectedProjectData} />}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               <TokensChart timeRange={timeRange} sseVersion={sseVersion} />
               <CostChart timeRange={timeRange} sseVersion={sseVersion} />
