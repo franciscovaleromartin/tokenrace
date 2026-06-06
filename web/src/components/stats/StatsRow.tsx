@@ -17,7 +17,9 @@ export function StatsRow({ summary, selectedProjectData }: StatsRowProps) {
       label: 'Tokens Input',
       value: formatNumber(inputTokens),
       accent: 'text-accent-blue',
-      sublabel: `caché: ${formatNumber(summary.tokens.cache)}`
+      sublabel: selectedProjectData
+        ? `hit rate: ${(selectedProjectData.cacheHitRate * 100).toFixed(1)}%`
+        : `caché: ${formatNumber(summary.tokens.cache)}`
     },
     {
       label: 'Tokens Output',
@@ -33,7 +35,7 @@ export function StatsRow({ summary, selectedProjectData }: StatsRowProps) {
     },
     {
       label: 'Coste de proyecto',
-      value: formatCost(selectedProjectData?.cost ?? 0),
+      value: selectedProjectData ? formatCost(selectedProjectData.cost) : '—',
       accent: 'text-accent-orange',
     },
     {
