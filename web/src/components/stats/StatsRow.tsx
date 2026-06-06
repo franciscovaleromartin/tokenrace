@@ -44,7 +44,7 @@ export function StatsRow({ summary, selectedProjectData }: StatsRowProps) {
     {
       label: 'Tiempo Activo',
       value: formatDuration(summary.activeTimeMs),
-      accent: 'text-accent-teal',
+      accent: 'text-text-secondary',
     },
     {
       label: 'Sesiones',
