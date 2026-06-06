@@ -409,15 +409,15 @@ export function processEvent({ eventName, timestamp, severity, attributes }) {
       session.apiRequests++
     }
 
-    // ── Tool stats ──
-    if (eventName === 'tool_use') {
+    // ── Tool stats de sesión ──
+    if (eventName === 'tool_result') {
       session.toolCalls++
     }
   }
 
-  // ── Tool stats globales ──
-  if (eventName === 'tool_use') {
-    const toolName = attributes['tool.name'] ?? attributes.tool ?? 'unknown'
+  // ── Tool stats globales — Claude Code envía tool_result (no tool_use) ──
+  if (eventName === 'tool_result') {
+    const toolName = attributes['tool_name'] ?? attributes['tool.name'] ?? 'unknown'
 
     if (!state.tools.has(toolName)) {
       state.tools.set(toolName, { count: 0, successes: 0, totalDurationMs: 0 })
@@ -425,12 +425,27 @@ export function processEvent({ eventName, timestamp, severity, attributes }) {
     const tool = state.tools.get(toolName)
     tool.count++
 
-    if (attributes.success === true || attributes['tool.success'] === true) {
+    if (attributes.success === true || attributes.success === 'true') {
       tool.successes++
     }
-    if (attributes['tool.duration_ms'] !== undefined) {
-      tool.totalDurationMs += Number(attributes['tool.duration_ms'])
-    }
+    const durMs = Number(attributes['duration_ms'] ?? attributes['tool.duration_ms'] ?? 0)
+    if (durMs > 0) tool.totalDurationMs += durMs
+  }
+
+  // ── Subagentes — Claude Code envía subagent_completed ──
+  if (eventName === 'subagent_completed') {
+    const seq     = attributes['event.sequence'] ?? Date.now()
+    const agentId = `${sessionId ?? 'unknown'}:${seq}`
+    const totalTokens = Number(attributes['total_tokens'] ?? 0)
+    state.agents.set(agentId, {
+      agentId,
+      parentAgentId: null,
+      tokensInput:  totalTokens,
+      tokensOutput: 0,
+      cost:         estimateCost(attributes['model'] ?? null, totalTokens, 0, 0),
+      toolCalls:    Number(attributes['total_tool_uses'] ?? 0),
+      durationMs:   Number(attributes['duration_ms'] ?? 0)
+    })
   }
 
   state.lastSeen   = timestamp
@@ -886,14 +901,14 @@ export function getTools(from) {
     avgDurationMs:  stats.count > 0 ? stats.totalDurationMs / stats.count : 0
   })).sort((a, b) => b.count - a.count)
 
-  // Tasa de aprobación/rechazo desde eventos en el rango
+  // Tasa de aprobación/rechazo desde tool_result (Claude Code usa decision_type)
   let approved = 0
   let rejected = 0
   for (const event of state.events) {
     if (event.timestamp < minTs) continue
-    if (event.eventName !== 'tool_use' && !event.eventName.includes('tool')) continue
-    if (event.attributes.approved === true)  approved++
-    if (event.attributes.approved === false) rejected++
+    if (event.eventName !== 'tool_result') continue
+    if (event.attributes['decision_type'] === 'accept') approved++
+    else if (event.attributes['decision_type'] === 'reject') rejected++
   }
 
   return { usage, decisionRate: { approved, rejected } }
@@ -948,7 +963,9 @@ export function saveSync() {
       events:           state.events,
       eventIndex:       state.eventIndex,
       totalEvents:      state.totalEvents,
-      startTime:        state.startTime
+      startTime:        state.startTime,
+      tools:            Array.from(state.tools.entries()),
+      agents:           Array.from(state.agents.values())
     }
 
     fs.writeFileSync(dataFile, JSON.stringify(data), { mode: 0o600 })
@@ -1017,6 +1034,20 @@ export function loadFromDisk() {
     }
     if (typeof data.startTime === 'number') {
       state.startTime = data.startTime
+    }
+
+    // Restaurar stats de herramientas
+    if (Array.isArray(data.tools)) {
+      for (const [toolName, stats] of data.tools) {
+        state.tools.set(toolName, stats)
+      }
+    }
+
+    // Restaurar agentes
+    if (Array.isArray(data.agents)) {
+      for (const agent of data.agents) {
+        state.agents.set(agent.agentId, agent)
+      }
     }
 
     // Re-aplicar mappings a sesiones (timeseries no necesitan propagación:

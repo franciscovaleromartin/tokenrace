@@ -181,16 +181,17 @@ test('processEvent: añade evento al buffer', () => {
   assert.equal(events[0].eventName, 'api_request')
 })
 
-test('processEvent: actualiza tool stats para tool_use events', () => {
+test('processEvent: actualiza tool stats para tool_result events (formato Claude Code)', () => {
   processEvent({
-    eventName: 'tool_use',
+    eventName: 'tool_result',
     timestamp: Date.now(),
     severity: 'INFO',
     attributes: {
-      'session.id':        'sess-tool',
-      'tool.name':         'Bash',
-      success:             true,
-      'tool.duration_ms':  150
+      'session.id':    'sess-tool',
+      'tool_name':     'Bash',
+      'success':       'true',
+      'duration_ms':   '150',
+      'decision_type': 'accept'
     }
   })
   const tools = getTools('all')
