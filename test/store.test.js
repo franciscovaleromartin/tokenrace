@@ -15,7 +15,6 @@ import { join } from 'node:path'
 import {
   processMetric,
   processEvent,
-  processTrace,
   labelSession,
   ignoreSession,
   reset,
@@ -402,4 +401,53 @@ test('getStatus: sessionCount excluye sesiones ignoradas', () => {
 
   ignoreSession('sess-a')
   assert.equal(getStatus().sessionCount, 1)
+})
+
+// ─── getAgents ─────────────────────────────────────────────────────────────────
+// Claude Code no emite eventos/spans con identidad de agente: la actividad de
+// subagentes (Task tool) llega como labels query_source: "subagent" + agent.name
+// en las métricas de tokens y coste.
+
+test('getAgents: agrega tokens y coste por agent.name desde métricas con query_source subagent', () => {
+  const ts = Date.now()
+  const labels = { 'session.id': 'sess-agents-1', model: 'claude-haiku', query_source: 'subagent', 'agent.name': 'Explore' }
+
+  processMetric({ name: 'claude_code.tokens.input',  value: 1000, timestamp: ts,     labels })
+  processMetric({ name: 'claude_code.tokens.output', value: 200,  timestamp: ts + 1, labels })
+  processMetric({ name: 'claude_code.cost',          value: 0.05, timestamp: ts + 2, labels })
+
+  // Actividad del hilo principal: no debe contar como agente
+  processMetric({ name: 'claude_code.tokens.input', value: 5000, timestamp: ts + 3, labels: { 'session.id': 'sess-agents-1', query_source: 'main' } })
+
+  const agents = getAgents()
+  assert.equal(agents.length, 1)
+  assert.deepEqual(agents[0], { name: 'Explore', tokensInput: 1000, tokensOutput: 200, cost: 0.05 })
+})
+
+test('getAgents: separa correctamente los deltas cumulativos de dos agent.name distintos en la misma sesión y modelo', () => {
+  const ts = Date.now()
+  const base = { 'session.id': 'sess-agents-2', model: 'claude-sonnet-4-6', query_source: 'subagent' }
+
+  // Dos series cumulativas independientes (una por agente) que comparten sesión+modelo+query_source.
+  // Sin agent.name en la clave de deduplicación, sus valores se mezclarían y los deltas saldrían mal.
+  processMetric({ name: 'claude_code.token.usage', value: 300, timestamp: ts,     labels: { ...base, type: 'input', 'agent.name': 'programador' } })
+  processMetric({ name: 'claude_code.token.usage', value: 700, timestamp: ts + 1, labels: { ...base, type: 'input', 'agent.name': 'general-purpose' } })
+  processMetric({ name: 'claude_code.token.usage', value: 450, timestamp: ts + 2, labels: { ...base, type: 'input', 'agent.name': 'programador' } })
+  processMetric({ name: 'claude_code.token.usage', value: 900, timestamp: ts + 3, labels: { ...base, type: 'input', 'agent.name': 'general-purpose' } })
+
+  const agents = getAgents()
+  const programador     = agents.find(a => a.name === 'programador')
+  const generalPurpose  = agents.find(a => a.name === 'general-purpose')
+
+  assert.equal(programador.tokensInput,    450) // 300 + (450 - 300)
+  assert.equal(generalPurpose.tokensInput, 900) // 700 + (900 - 700)
+})
+
+test('getAgents: ordena por coste descendente', () => {
+  const ts = Date.now()
+  processMetric({ name: 'claude_code.cost', value: 0.01, timestamp: ts,     labels: { 'session.id': 's', query_source: 'subagent', 'agent.name': 'barato' } })
+  processMetric({ name: 'claude_code.cost', value: 0.5,  timestamp: ts + 1, labels: { 'session.id': 's', query_source: 'subagent', 'agent.name': 'caro' } })
+
+  const agents = getAgents()
+  assert.deepEqual(agents.map(a => a.name), ['caro', 'barato'])
 })

@@ -12,7 +12,7 @@ import { SessionsTable } from './components/tables/SessionsTable'
 import { ProjectsTable } from './components/tables/ProjectsTable'
 import { ToolsTable } from './components/tables/ToolsTable'
 import { EventsFeed } from './components/events/EventsFeed'
-import { AgentsTree } from './components/agents/AgentsTree'
+import { AgentsList } from './components/agents/AgentsList'
 import { useTimeRange } from './hooks/useTimeRange'
 import { useMetrics } from './hooks/useMetrics'
 import { api } from './api'
@@ -177,7 +177,7 @@ export default function App() {
         {activeTab === 'sessions' && <SessionsTable timeRange={timeRange} sseVersion={sseVersion} />}
         {activeTab === 'projects' && <ProjectsTable timeRange={timeRange} sseVersion={sseVersion} />}
         {activeTab === 'tools'    && <ToolsTable timeRange={timeRange} sseVersion={sseVersion} />}
-        {activeTab === 'agents'   && <AgentsTree sseVersion={sseVersion} />}
+        {activeTab === 'agents'   && <AgentsList sseVersion={sseVersion} />}
         {activeTab === 'events'   && <EventsFeed timeRange={timeRange} sseVersion={sseVersion} />}
 
         {activeTab === 'costs' && (

@@ -86,13 +86,10 @@ export interface Event {
 }
 
 export interface Agent {
-  agentId: string
-  parentAgentId: string | null
+  name: string
   tokensInput: number
   tokensOutput: number
   cost: number
-  toolCalls: number
-  durationMs: number
 }
 
 export interface ModelStats {

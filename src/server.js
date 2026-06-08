@@ -15,7 +15,7 @@ import express from 'express'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { parseMetrics, parseEvents, parseTraces } from './otlp-parser.js'
-import { processMetric, processEvent, processTrace, loadFromDisk, startAutoSave, saveSync, drainAutoDetectQueue, labelSession } from './store.js'
+import { processMetric, processEvent, loadFromDisk, startAutoSave, saveSync, drainAutoDetectQueue, labelSession } from './store.js'
 import { detectProjectBySessionId } from './git-detector.js'
 import { createRouter, broadcast } from './api-routes.js'
 
@@ -92,9 +92,6 @@ export async function startServer({ port = 1337 } = {}) {
    */
   app.post('/v1/traces', (req, res) => {
     const spans = parseTraces(req.body)
-    for (const span of spans) {
-      processTrace(span)
-    }
     broadcast('trace', { count: spans.length })
     res.json({ partialSuccess: {} })
   })

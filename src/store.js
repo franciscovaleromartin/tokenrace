@@ -65,7 +65,6 @@ const state = {
   eventIndex:       0,
   projects:         new Map(),  // projectName → ProjectAggregates
   tools:            new Map(),  // toolName    → ToolStats
-  agents:           new Map(),  // agentId     → AgentData
   models:           new Map(),  // modelName   → ModelStats
   cumulativeValues: new Map(),  // clave → último valor acumulativo (no persiste)
   lastSeen:         null,
@@ -97,7 +96,7 @@ function normalizeIncoming(name, value, labels) {
   switch (name) {
     case 'claude_code.token.usage': {
       const type = labels.type
-      const key  = `token:${sid}:${type}:${labels.model ?? ''}:${labels.query_source ?? ''}`
+      const key  = `token:${sid}:${type}:${labels.model ?? ''}:${labels.query_source ?? ''}:${labels['agent.name'] ?? ''}`
       const delta = cumulativeDelta(key, value)
       const nameMap = {
         'input':         'claude_code.tokens.input',
@@ -110,7 +109,7 @@ function normalizeIncoming(name, value, labels) {
     }
 
     case 'claude_code.cost.usage': {
-      const key   = `cost:${sid}:${labels.model ?? ''}:${labels.query_source ?? ''}:${labels.effort ?? ''}`
+      const key   = `cost:${sid}:${labels.model ?? ''}:${labels.query_source ?? ''}:${labels.effort ?? ''}:${labels['agent.name'] ?? ''}`
       const delta = cumulativeDelta(key, value)
       return { name: 'claude_code.cost', value: delta }
     }
@@ -432,53 +431,10 @@ export function processEvent({ eventName, timestamp, severity, attributes }) {
     if (durMs > 0) tool.totalDurationMs += durMs
   }
 
-  // ── Subagentes — Claude Code envía subagent_completed ──
-  if (eventName === 'subagent_completed') {
-    const seq     = attributes['event.sequence'] ?? Date.now()
-    const agentId = `${sessionId ?? 'unknown'}:${seq}`
-    const totalTokens = Number(attributes['total_tokens'] ?? 0)
-    state.agents.set(agentId, {
-      agentId,
-      parentAgentId: null,
-      tokensInput:  totalTokens,
-      tokensOutput: 0,
-      cost:         estimateCost(attributes['model'] ?? null, totalTokens, 0, 0),
-      toolCalls:    Number(attributes['total_tool_uses'] ?? 0),
-      durationMs:   Number(attributes['duration_ms'] ?? 0)
-    })
-  }
-
   state.lastSeen   = timestamp
   state.totalEvents++
 
   return eventObj
-}
-
-/**
- * Procesa un span normalizado.
- * Solo actúa si el span tiene agentId.
- * @param {Object} span
- */
-export function processTrace(span) {
-  const attrs   = span.attributes
-  const agentId = attrs['agent.id'] ?? attrs['gen_ai.agent.id'] ?? null
-  if (!agentId) return
-
-  if (!state.agents.has(agentId)) {
-    state.agents.set(agentId, {
-      agentId,
-      parentAgentId: attrs['agent.parent_id'] ?? null,
-      tokensInput:  0,
-      tokensOutput: 0,
-      cost:         0,
-      toolCalls:    0,
-      durationMs:   0
-    })
-  }
-
-  const agent    = state.agents.get(agentId)
-  const duration = span.endTime - span.startTime
-  if (duration > 0) agent.durationMs += duration
 }
 
 /**
@@ -522,7 +478,6 @@ export function reset() {
   state.eventIndex    = 0
   state.projects.clear()
   state.tools.clear()
-  state.agents.clear()
   state.models.clear()
   state.cumulativeValues.clear()
   state.lastSeen    = null
@@ -915,10 +870,37 @@ export function getTools(from) {
 }
 
 /**
- * Lista de agentes registrados.
+ * Estadísticas de subagentes (Task tool), derivadas de las métricas de tokens
+ * y coste cuyas labels traen query_source: "subagent" y agent.name.
+ * Claude Code no emite eventos/spans con identidad de agente individual, así
+ * que se agrega por nombre de agente (p. ej. "Explore", "general-purpose").
  */
 export function getAgents() {
-  return Array.from(state.agents.values())
+  const byAgent = new Map() // agentName → { tokensInput, tokensOutput, cost }
+
+  const metricField = {
+    'claude_code.tokens.input':  'tokensInput',
+    'claude_code.tokens.output': 'tokensOutput',
+    'claude_code.cost':          'cost'
+  }
+
+  for (const [metricName, field] of Object.entries(metricField)) {
+    for (const point of state.timeseries.get(metricName) ?? []) {
+      const labels = point.labels
+      if (labels.query_source !== 'subagent') continue
+      const name = labels['agent.name']
+      if (!name) continue
+
+      if (!byAgent.has(name)) {
+        byAgent.set(name, { tokensInput: 0, tokensOutput: 0, cost: 0 })
+      }
+      byAgent.get(name)[field] += point.value
+    }
+  }
+
+  return Array.from(byAgent.entries())
+    .map(([name, stats]) => ({ name, ...stats }))
+    .sort((a, b) => b.cost - a.cost)
 }
 
 /**
@@ -964,8 +946,7 @@ export function saveSync() {
       eventIndex:       state.eventIndex,
       totalEvents:      state.totalEvents,
       startTime:        state.startTime,
-      tools:            Array.from(state.tools.entries()),
-      agents:           Array.from(state.agents.values())
+      tools:            Array.from(state.tools.entries())
     }
 
     fs.writeFileSync(dataFile, JSON.stringify(data), { mode: 0o600 })
@@ -1040,13 +1021,6 @@ export function loadFromDisk() {
     if (Array.isArray(data.tools)) {
       for (const [toolName, stats] of data.tools) {
         state.tools.set(toolName, stats)
-      }
-    }
-
-    // Restaurar agentes
-    if (Array.isArray(data.agents)) {
-      for (const agent of data.agents) {
-        state.agents.set(agent.agentId, agent)
       }
     }
 
