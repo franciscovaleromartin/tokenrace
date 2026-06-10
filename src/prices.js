@@ -3,9 +3,10 @@
  */
 
 export const MODEL_PRICES = {
-  'claude-opus-4-8':   { input: 15.00, output: 75.00, cacheWrite: 18.75, cacheRead: 1.50 },
+  'claude-fable-5':    { input: 10.00, output: 50.00, cacheWrite: 12.50, cacheRead: 1.00 },
+  'claude-opus-4-8':   { input:  5.00, output: 25.00, cacheWrite:  6.25, cacheRead: 0.50 },
   'claude-sonnet-4-6': { input:  3.00, output: 15.00, cacheWrite:  3.75, cacheRead: 0.30 },
-  'claude-haiku-4-5':  { input:  0.80, output:  4.00, cacheWrite:  1.00, cacheRead: 0.08 },
+  'claude-haiku-4-5':  { input:  1.00, output:  5.00, cacheWrite:  1.25, cacheRead: 0.10 },
 }
 
 const DEFAULT_PRICES = MODEL_PRICES['claude-sonnet-4-6']
@@ -17,6 +18,7 @@ const DEFAULT_PRICES = MODEL_PRICES['claude-sonnet-4-6']
 export function getPrices(modelName) {
   if (!modelName) return DEFAULT_PRICES
   const lower = modelName.toLowerCase()
+  if (lower.includes('fable'))  return MODEL_PRICES['claude-fable-5']
   if (lower.includes('opus'))   return MODEL_PRICES['claude-opus-4-8']
   if (lower.includes('haiku'))  return MODEL_PRICES['claude-haiku-4-5']
   if (lower.includes('sonnet')) return MODEL_PRICES['claude-sonnet-4-6']
