@@ -180,11 +180,11 @@ export default function App() {
                 sseVersion={sseVersion}
               />
             )}
-            <ActivityHeatmap sseVersion={sseVersion} />
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               <TokensChart timeRange={timeRange} sseVersion={sseVersion} />
               <CostChart timeRange={timeRange} sseVersion={sseVersion} />
             </div>
+            <ActivityHeatmap sseVersion={sseVersion} />
           </div>
         )}
 

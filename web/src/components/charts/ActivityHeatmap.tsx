@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { api } from '../../api'
 import { formatNumber, formatCost } from '../../utils/format'
 import type { TimeseriesPoint } from '../../types'
@@ -32,6 +32,13 @@ function dayIndex(ts: number): number {
 export function ActivityHeatmap({ sseVersion }: ActivityHeatmapProps) {
   const [days, setDays] = useState<Map<number, DayData>>(new Map())
   const [tooltip, setTooltip] = useState<TooltipData | null>(null)
+  const scrollRef = useRef<HTMLDivElement>(null)
+
+  // Mostrar lo más reciente por defecto: scroll al extremo derecho
+  useEffect(() => {
+    const el = scrollRef.current
+    if (el) el.scrollLeft = el.scrollWidth
+  }, [days])
 
   useEffect(() => {
     Promise.all([
@@ -116,7 +123,7 @@ export function ActivityHeatmap({ sseVersion }: ActivityHeatmapProps) {
   return (
     <div className="bg-bg-card border border-bg-border rounded-lg p-4">
       <h3 className="text-sm font-medium text-text-secondary mb-4">Actividad — últimos 12 meses</h3>
-      <div className="overflow-x-auto pb-1">
+      <div ref={scrollRef} className="overflow-x-auto pb-1">
         <div className="relative inline-block" data-heatmap onMouseLeave={() => setTooltip(null)}>
           {/* Etiquetas de mes */}
           <div className="relative h-4 mb-1" style={{ marginLeft: LABEL_W }}>
