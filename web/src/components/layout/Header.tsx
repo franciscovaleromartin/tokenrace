@@ -1,5 +1,7 @@
 import { RefreshCw } from 'lucide-react'
+import { formatNumber, formatCost } from '../../utils/format'
 import type { TimeRange } from '../../types'
+import type { LiveRate } from '../../hooks/useLiveRate'
 
 interface HeaderProps {
   timeRange: TimeRange
@@ -7,6 +9,7 @@ interface HeaderProps {
   connected: boolean
   lastSeen: number | null
   onReset: () => void
+  liveRate: LiveRate
 }
 
 const TIME_RANGES: { label: string; value: TimeRange }[] = [
@@ -25,7 +28,7 @@ function timeSince(ts: number | null): string {
   return `hace ${Math.floor(diff / 86_400_000)}d`
 }
 
-export function Header({ timeRange, onTimeRangeChange, connected, lastSeen, onReset }: HeaderProps) {
+export function Header({ timeRange, onTimeRangeChange, connected, lastSeen, onReset, liveRate }: HeaderProps) {
   return (
     <header className="h-10 flex items-center justify-between px-4 border-b border-bg-border bg-bg-base sticky top-0 z-50">
       {/* Logo */}
@@ -34,7 +37,7 @@ export function Header({ timeRange, onTimeRangeChange, connected, lastSeen, onRe
         <span>tokenrace</span>
       </div>
 
-      {/* Live indicator */}
+      {/* Live indicator + velocímetro */}
       <div className="flex items-center gap-2 text-xs">
         <span
           className={`inline-block w-2 h-2 rounded-full ${connected ? 'bg-accent-green animate-pulse' : 'bg-text-muted'}`}
@@ -43,6 +46,12 @@ export function Header({ timeRange, onTimeRangeChange, connected, lastSeen, onRe
           {connected ? 'LIVE' : 'SIN DATOS'}
         </span>
         <span className="text-text-muted">{timeSince(lastSeen)}</span>
+        {liveRate.tokensPerMin > 0 && (
+          <span className="hidden sm:flex items-center gap-2 ml-2 font-mono">
+            <span className="text-accent-orange">⚡ {formatNumber(liveRate.tokensPerMin)} tok/min</span>
+            <span className="text-accent-purple">{formatCost(liveRate.costPerHour)}/h</span>
+          </span>
+        )}
       </div>
 
       {/* Controles derechos */}

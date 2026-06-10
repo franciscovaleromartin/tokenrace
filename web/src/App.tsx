@@ -17,6 +17,7 @@ import { EventsFeed } from './components/events/EventsFeed'
 import { AgentsList } from './components/agents/AgentsList'
 import { useTimeRange } from './hooks/useTimeRange'
 import { useMetrics } from './hooks/useMetrics'
+import { useLiveRate } from './hooks/useLiveRate'
 import { api } from './api'
 import { formatCost, formatNumber } from './utils/format'
 import { estimateCacheSavings } from './utils/prices'
@@ -108,6 +109,7 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<TabId>('overview')
   const { timeRange, setTimeRange } = useTimeRange()
   const { status, summary, refetch, sseVersion } = useMetrics(timeRange)
+  const liveRate = useLiveRate(sseVersion)
   const [userSelectedProject, setUserSelectedProject] = useState<string | null>(null)
   const [knownProjects, setKnownProjects] = useState<string[]>([])
   const [projectsData, setProjectsData] = useState<Project[]>([])
@@ -134,6 +136,7 @@ export default function App() {
           connected={false}
           lastSeen={null}
           onReset={handleReset}
+          liveRate={liveRate}
         />
         <SetupGuide />
       </div>
@@ -151,6 +154,7 @@ export default function App() {
         connected={status.connected}
         lastSeen={status.lastSeen}
         onReset={handleReset}
+        liveRate={liveRate}
       />
 
       {/* Zona de notificaciones — solo aparece si hay sesiones sin etiquetar */}
