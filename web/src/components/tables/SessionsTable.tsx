@@ -16,10 +16,16 @@ export function SessionsTable({ timeRange, sseVersion }: SessionsTableProps) {
   const [sessionEvents, setSessionEvents] = useState<Event[]>([])
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editValue, setEditValue] = useState('')
+  const [projectFilter, setProjectFilter] = useState('')
+  const [knownProjects, setKnownProjects] = useState<string[]>([])
   const { sorted, toggle, indicator } = useSort(sessions, 'startTime')
 
   useEffect(() => {
-    api.sessions(50).then(setSessions).catch(() => {})
+    api.sessions(50, projectFilter || undefined).then(setSessions).catch(() => {})
+  }, [timeRange, sseVersion, projectFilter])
+
+  useEffect(() => {
+    api.projects(timeRange).then(ps => setKnownProjects(ps.map(p => p.project))).catch(() => {})
   }, [timeRange, sseVersion])
 
   function toggleExpand(sessionId: string) {
@@ -49,11 +55,32 @@ export function SessionsTable({ timeRange, sseVersion }: SessionsTableProps) {
     setEditingId(null)
   }
 
-  if (sessions.length === 0) {
+  if (sessions.length === 0 && !projectFilter) {
     return <div className="text-text-muted text-sm p-4">Sin sesiones registradas</div>
   }
 
   return (
+    <div className="flex flex-col gap-3">
+      {/* Filtro por proyecto */}
+      {knownProjects.length > 0 && (
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-text-muted uppercase tracking-wider">Proyecto</span>
+          <select
+            value={projectFilter}
+            onChange={e => setProjectFilter(e.target.value)}
+            className="bg-bg-card border border-bg-border rounded px-2 py-1 text-xs text-text-primary outline-none focus:border-accent-green cursor-pointer"
+          >
+            <option value="">Todos</option>
+            {knownProjects.map(p => (
+              <option key={p} value={p}>{p}</option>
+            ))}
+          </select>
+        </div>
+      )}
+
+      {sessions.length === 0 ? (
+        <div className="text-text-muted text-sm p-4">Sin sesiones para este proyecto</div>
+      ) : (
     <div className="bg-bg-card border border-bg-border rounded-lg">
       <div className="overflow-x-auto">
       <table className="w-full text-sm min-w-[720px] whitespace-nowrap">
@@ -138,6 +165,8 @@ export function SessionsTable({ timeRange, sseVersion }: SessionsTableProps) {
         </tbody>
       </table>
       </div>
+    </div>
+      )}
     </div>
   )
 }
