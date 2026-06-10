@@ -4,6 +4,16 @@ All notable changes to tokenrace are documented here.
 
 ---
 
+## [0.2.2] — 2026-06-10
+
+### Added
+- **Models tab respects the time range** — with 24h/7d/30d selected, per-model stats are computed from timestamped timeseries (requests counted from the recent event buffer); "Todo" keeps the full accumulator. New "% of spend" column
+- **Sortable tables** — clickable column headers with ↑↓ indicator in Sessions and Projects
+- **Project filter in Sessions** — dropdown to show only one project's sessions
+- **Dynamic tab title** — browser tab shows today's spend live: "$4.21 hoy · tokenrace"
+
+---
+
 ## [0.2.1] — 2026-06-10
 
 ### Fixed
