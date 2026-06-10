@@ -503,3 +503,23 @@ test('loadFromDisk: reconstruye modelos desde timeseries si el archivo no los tr
   assert.equal(m.tokensOutput, 250)
   assert.equal(m.cost, 1.5)
 })
+
+test('getModels: filtra por rango temporal desde timeseries', () => {
+  const now = Date.now()
+  const old = now - 10 * 86_400_000 // hace 10 días
+
+  processMetric({ name: 'claude_code.tokens.input', value: 100, timestamp: old, labels: { 'session.id': 's-old', model: 'claude-viejo' } })
+  processMetric({ name: 'claude_code.tokens.input', value: 200, timestamp: now, labels: { 'session.id': 's-new', model: 'claude-nuevo' } })
+
+  // Sin rango: ambos modelos (acumulador global)
+  const all = getModels()
+  assert.ok(all.find(m => m.model === 'claude-viejo'))
+  assert.ok(all.find(m => m.model === 'claude-nuevo'))
+
+  // Últimas 24h: solo el modelo reciente
+  const recent = getModels('now-24h')
+  assert.equal(recent.find(m => m.model === 'claude-viejo'), undefined)
+  const nuevo = recent.find(m => m.model === 'claude-nuevo')
+  assert.ok(nuevo)
+  assert.equal(nuevo.tokensInput, 200)
+})

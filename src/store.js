@@ -929,10 +929,46 @@ export function getAgents() {
 
 /**
  * Estadísticas por modelo ordenadas por coste descendente.
+ * Sin rango (o "all") usa el acumulador global; con rango temporal se
+ * calculan desde las timeseries filtradas por timestamp (labels.model),
+ * y requests se cuenta desde el buffer de eventos api_request.
  * @param {string} from
  */
 export function getModels(from) {
-  return Array.from(state.models.entries())
+  const minTs = parseTimeRange(from)
+
+  let entries
+  if (minTs === 0) {
+    entries = Array.from(state.models.entries())
+  } else {
+    const byModel = new Map() // model → { tokensInput, tokensOutput, cost, requests }
+    const metricField = {
+      'claude_code.tokens.input':  'tokensInput',
+      'claude_code.tokens.output': 'tokensOutput',
+      'claude_code.cost':          'cost'
+    }
+    for (const [metricName, field] of Object.entries(metricField)) {
+      for (const point of state.timeseries.get(metricName) ?? []) {
+        if (point.ts < minTs) continue
+        const model = point.labels?.model
+        if (!model) continue
+        if (!byModel.has(model)) {
+          byModel.set(model, { tokensInput: 0, tokensOutput: 0, cost: 0, requests: 0 })
+        }
+        byModel.get(model)[field] += point.value
+      }
+    }
+    // Requests desde el buffer de eventos (mejor esfuerzo: buffer circular de 1000)
+    for (const event of state.events) {
+      if (event.eventName !== 'api_request') continue
+      if (event.timestamp < minTs) continue
+      if (!event.model || !byModel.has(event.model)) continue
+      byModel.get(event.model).requests++
+    }
+    entries = Array.from(byModel.entries())
+  }
+
+  return entries
     .map(([model, stats]) => {
       const cost = stats.cost > 0
         ? stats.cost

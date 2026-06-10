@@ -192,7 +192,7 @@ export default function App() {
         {activeTab === 'projects' && <ProjectsTable timeRange={timeRange} sseVersion={sseVersion} />}
         {activeTab === 'tools'    && <ToolsTable timeRange={timeRange} sseVersion={sseVersion} />}
         {activeTab === 'agents'   && <AgentsList sseVersion={sseVersion} />}
-        {activeTab === 'models'   && <ModelsTable sseVersion={sseVersion} />}
+        {activeTab === 'models'   && <ModelsTable timeRange={timeRange} sseVersion={sseVersion} />}
         {activeTab === 'events'   && <EventsFeed timeRange={timeRange} sseVersion={sseVersion} />}
 
         {activeTab === 'costs' && (
