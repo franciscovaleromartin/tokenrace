@@ -12,6 +12,7 @@ interface DayData { tokens: number; cost: number }
 interface TooltipData {
   x: number
   y: number
+  below: boolean
   label: string
   tokens: number
   cost: number
@@ -103,15 +104,20 @@ export function ActivityHeatmap({ sseVersion }: ActivityHeatmapProps) {
     return Math.min(4, Math.max(1, Math.ceil((tokens / maxTokens) * 4)))
   }
 
+  // Tooltip en coordenadas de viewport (position: fixed) para que no lo
+  // recorte el overflow del contenedor. Se ajusta para no salirse de pantalla.
+  const TOOLTIP_HALF_W = 110
+
   function showTooltip(e: React.MouseEvent<HTMLDivElement>, idx: number) {
-    const container = e.currentTarget.closest('[data-heatmap]') as HTMLElement | null
-    if (!container) return
-    const containerRect = container.getBoundingClientRect()
     const cellRect = e.currentTarget.getBoundingClientRect()
     const data = days.get(idx)
+    const rawX = cellRect.left + CELL / 2
+    const x = Math.min(Math.max(rawX, TOOLTIP_HALF_W + 8), window.innerWidth - TOOLTIP_HALF_W - 8)
+    const below = cellRect.top < 70 // sin sitio arriba → mostrar debajo de la celda
     setTooltip({
-      x: cellRect.left - containerRect.left + CELL / 2,
-      y: cellRect.top - containerRect.top,
+      x,
+      y: below ? cellRect.bottom + 8 : cellRect.top - 8,
+      below,
       label: new Date(idx * DAY_MS).toLocaleDateString('es', {
         weekday: 'long', day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC',
       }),
@@ -123,7 +129,7 @@ export function ActivityHeatmap({ sseVersion }: ActivityHeatmapProps) {
   return (
     <div className="bg-bg-card border border-bg-border rounded-lg p-4">
       <h3 className="text-sm font-medium text-text-secondary mb-4">Actividad — últimos 12 meses</h3>
-      <div ref={scrollRef} className="overflow-x-auto pb-1">
+      <div ref={scrollRef} className="overflow-x-auto pb-1" onScroll={() => setTooltip(null)}>
         <div className="relative inline-block" data-heatmap onMouseLeave={() => setTooltip(null)}>
           {/* Etiquetas de mes */}
           <div className="relative h-4 mb-1" style={{ marginLeft: LABEL_W }}>
@@ -176,14 +182,14 @@ export function ActivityHeatmap({ sseVersion }: ActivityHeatmapProps) {
             </div>
           </div>
 
-          {/* Tooltip */}
+          {/* Tooltip — fijo al viewport para no quedar recortado por el overflow */}
           {tooltip && (
             <div
-              className="absolute z-10 pointer-events-none px-3 py-2 rounded-md text-xs whitespace-nowrap"
+              className="fixed z-50 pointer-events-none px-3 py-2 rounded-md text-xs whitespace-nowrap"
               style={{
                 left: tooltip.x,
-                top: tooltip.y - 8,
-                transform: 'translate(-50%, -100%)',
+                top: tooltip.y,
+                transform: tooltip.below ? 'translate(-50%, 0)' : 'translate(-50%, -100%)',
                 background: '#0d0d0d',
                 border: '1px solid #1a1a1a',
               }}
