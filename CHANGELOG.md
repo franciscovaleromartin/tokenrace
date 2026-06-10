@@ -4,6 +4,19 @@ All notable changes to tokenrace are documented here.
 
 ---
 
+## [0.2.0] — 2026-06-10
+
+### Added
+- **Models tab** — per-model comparison table (requests, tokens in/out, cost) with proportional cost bars, fed by the existing `/api/models` endpoint
+- **Activity heatmap** — GitHub-style yearly grid in Overview showing daily token activity with a 5-level orange scale and hover tooltip (date, tokens, cost)
+- **Trend deltas** — Tokens Input/Output/Total and Total Cost cards now show ▲/▼ percentage change vs the equivalent previous period (24h/7d/30d ranges)
+- **Live rate meter** — header shows current pace (`⚡ tokens/min · $/h`) computed from the last 5 minutes, refreshed via SSE and a 30 s fallback interval
+
+### Fixed
+- Model price table updated: added Claude Fable 5 ($10/$50 per MTok) and corrected Opus 4.8 ($5/$25) and Haiku 4.5 ($1/$5)
+
+---
+
 ## [0.1.11] — 2026-06-03
 
 ### Added
