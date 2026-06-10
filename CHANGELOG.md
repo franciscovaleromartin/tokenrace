@@ -4,6 +4,13 @@ All notable changes to tokenrace are documented here.
 
 ---
 
+## [0.2.3] — 2026-06-10
+
+### Fixed
+- `index.html` is now served with `Cache-Control: no-cache` so the browser always picks up the latest dashboard after an update (hashed asset bundles remain cacheable)
+
+---
+
 ## [0.2.2] — 2026-06-10
 
 ### Added
