@@ -110,13 +110,22 @@ export async function startServer({ port = 1337 } = {}) {
   app.use(createRouter({ port }))
 
   // ── Archivos estáticos (web compilada) ──────────────────────────────────────
-  // dist/ está en la raíz del proyecto (un nivel arriba de src/)
+  // dist/ está en la raíz del proyecto (un nivel arriba de src/).
+  // index.html no debe cachearse: referencia bundles con hash que cambian en
+  // cada versión; si el navegador lo cachea, sigue mostrando la app vieja.
   const distPath = path.join(__dirname, '../dist')
-  app.use(express.static(distPath))
+  app.use(express.static(distPath, {
+    setHeaders(res, filePath) {
+      if (filePath.endsWith('index.html')) {
+        res.setHeader('Cache-Control', 'no-cache')
+      }
+    }
+  }))
 
   // SPA fallback: cualquier ruta no-API sirve index.html
   app.get(/^(?!\/api\/)/, (req, res) => {
     const indexPath = path.join(distPath, 'index.html')
+    res.setHeader('Cache-Control', 'no-cache')
     res.sendFile(indexPath, (err) => {
       if (err) res.status(404).send('Dashboard no disponible. Ejecuta: npm run build')
     })
