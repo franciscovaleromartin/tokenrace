@@ -121,6 +121,13 @@ export default function App() {
     }).catch(() => {})
   }, [sseVersion, timeRange])
 
+  // Título de pestaña con el coste del día, independiente del rango seleccionado
+  useEffect(() => {
+    api.summary('now-24h')
+      .then(s => { document.title = s.cost > 0 ? `${formatCost(s.cost)} hoy · tokenrace` : 'tokenrace' })
+      .catch(() => {})
+  }, [sseVersion])
+
   const handleReset = useCallback(async () => {
     await api.reset()
     refetch()
