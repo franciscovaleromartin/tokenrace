@@ -104,4 +104,4 @@ export interface ModelStats {
 
 export type TimeRange = 'now-24h' | 'now-7d' | 'now-30d' | 'all'
 
-export type TabId = 'overview' | 'sessions' | 'projects' | 'tools' | 'agents' | 'events' | 'costs'
+export type TabId = 'overview' | 'sessions' | 'projects' | 'tools' | 'agents' | 'models' | 'events' | 'costs'

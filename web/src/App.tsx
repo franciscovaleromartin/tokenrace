@@ -11,6 +11,7 @@ import { EfficiencyChart } from './components/charts/EfficiencyChart'
 import { SessionsTable } from './components/tables/SessionsTable'
 import { ProjectsTable } from './components/tables/ProjectsTable'
 import { ToolsTable } from './components/tables/ToolsTable'
+import { ModelsTable } from './components/tables/ModelsTable'
 import { EventsFeed } from './components/events/EventsFeed'
 import { AgentsList } from './components/agents/AgentsList'
 import { useTimeRange } from './hooks/useTimeRange'
@@ -178,6 +179,7 @@ export default function App() {
         {activeTab === 'projects' && <ProjectsTable timeRange={timeRange} sseVersion={sseVersion} />}
         {activeTab === 'tools'    && <ToolsTable timeRange={timeRange} sseVersion={sseVersion} />}
         {activeTab === 'agents'   && <AgentsList sseVersion={sseVersion} />}
+        {activeTab === 'models'   && <ModelsTable sseVersion={sseVersion} />}
         {activeTab === 'events'   && <EventsFeed timeRange={timeRange} sseVersion={sseVersion} />}
 
         {activeTab === 'costs' && (

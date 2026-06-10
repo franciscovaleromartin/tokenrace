@@ -11,6 +11,7 @@ const TABS: Tab[] = [
   { id: 'projects',  label: 'Projects' },
   { id: 'tools',     label: 'Tools' },
   { id: 'agents',    label: 'Agents' },
+  { id: 'models',    label: 'Models' },
   { id: 'events',    label: 'Events' },
   { id: 'costs',     label: 'Costs' },
 ]
