@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { Trash2 } from 'lucide-react'
 import { api } from '../../api'
 import { formatNumber, formatCost } from '../../utils/format'
+import { useSort } from '../../hooks/useSort'
 import type { Project, TimeRange } from '../../types'
 
 interface ProjectsTableProps {
@@ -12,6 +13,7 @@ interface ProjectsTableProps {
 export function ProjectsTable({ timeRange, sseVersion }: ProjectsTableProps) {
   const [projects, setProjects] = useState<Project[]>([])
   const [resetting, setResetting] = useState<string | null>(null)
+  const { sorted, toggle, indicator } = useSort(projects, 'cost')
 
   const load = useCallback(() => {
     api.projects(timeRange).then(setProjects).catch(() => {})
@@ -56,19 +58,19 @@ export function ProjectsTable({ timeRange, sseVersion }: ProjectsTableProps) {
         <table className="w-full text-sm min-w-[640px]">
           <thead>
             <tr className="border-b border-bg-border">
-              <th className="text-left px-3 py-2 text-text-muted font-medium">Proyecto</th>
-              <th className="text-right px-3 py-2 text-text-muted font-medium">Sesiones</th>
-              <th className="text-right px-3 py-2 text-text-muted font-medium">Input</th>
-              <th className="text-right px-3 py-2 text-text-muted font-medium">Output</th>
-              <th className="text-right px-3 py-2 text-text-muted font-medium">Caché %</th>
-              <th className="text-right px-3 py-2 text-text-muted font-medium">Coste</th>
-              <th className="text-right px-3 py-2 text-text-muted font-medium">Commits</th>
+              <th className="text-left px-3 py-2 text-text-muted font-medium cursor-pointer hover:text-text-secondary select-none" onClick={() => toggle('project')}>Proyecto{indicator('project')}</th>
+              <th className="text-right px-3 py-2 text-text-muted font-medium cursor-pointer hover:text-text-secondary select-none" onClick={() => toggle('sessions')}>Sesiones{indicator('sessions')}</th>
+              <th className="text-right px-3 py-2 text-text-muted font-medium cursor-pointer hover:text-text-secondary select-none" onClick={() => toggle('tokensInput')}>Input{indicator('tokensInput')}</th>
+              <th className="text-right px-3 py-2 text-text-muted font-medium cursor-pointer hover:text-text-secondary select-none" onClick={() => toggle('tokensOutput')}>Output{indicator('tokensOutput')}</th>
+              <th className="text-right px-3 py-2 text-text-muted font-medium cursor-pointer hover:text-text-secondary select-none" onClick={() => toggle('cacheHitRate')}>Caché %{indicator('cacheHitRate')}</th>
+              <th className="text-right px-3 py-2 text-text-muted font-medium cursor-pointer hover:text-text-secondary select-none" onClick={() => toggle('cost')}>Coste{indicator('cost')}</th>
+              <th className="text-right px-3 py-2 text-text-muted font-medium cursor-pointer hover:text-text-secondary select-none" onClick={() => toggle('commits')}>Commits{indicator('commits')}</th>
               <th className="text-right px-3 py-2 text-text-muted font-medium">LOC +/-</th>
               <th className="px-3 py-2" />
             </tr>
           </thead>
           <tbody>
-            {projects.map(p => (
+            {sorted.map(p => (
               <tr key={p.project} className="border-b border-bg-border hover:bg-bg-card-hover">
                 <td className="px-3 py-2 text-text-primary font-medium">{p.project}</td>
                 <td className="px-3 py-2 text-right text-text-secondary">{p.sessions}</td>

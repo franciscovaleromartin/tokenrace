@@ -2,6 +2,7 @@ import { useState, useEffect, Fragment } from 'react'
 import { ChevronDown, ChevronRight, Edit2, Check, X } from 'lucide-react'
 import { api } from '../../api'
 import { formatDuration, formatRelativeTime, formatNumber, formatCost } from '../../utils/format'
+import { useSort } from '../../hooks/useSort'
 import type { Session, Event, TimeRange } from '../../types'
 
 interface SessionsTableProps {
@@ -15,6 +16,7 @@ export function SessionsTable({ timeRange, sseVersion }: SessionsTableProps) {
   const [sessionEvents, setSessionEvents] = useState<Event[]>([])
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editValue, setEditValue] = useState('')
+  const { sorted, toggle, indicator } = useSort(sessions, 'startTime')
 
   useEffect(() => {
     api.sessions(50).then(setSessions).catch(() => {})
@@ -59,17 +61,17 @@ export function SessionsTable({ timeRange, sseVersion }: SessionsTableProps) {
           <tr className="border-b border-bg-border">
             <th className="w-6 px-3 py-2" />
             <th className="text-left px-3 py-2 text-text-muted font-medium">ID</th>
-            <th className="text-left px-3 py-2 text-text-muted font-medium">Proyecto</th>
-            <th className="text-left px-3 py-2 text-text-muted font-medium">Modelo</th>
-            <th className="text-left px-3 py-2 text-text-muted font-medium">Inicio</th>
-            <th className="text-right px-3 py-2 text-text-muted font-medium">Duración</th>
-            <th className="text-right px-3 py-2 text-text-muted font-medium">Input</th>
-            <th className="text-right px-3 py-2 text-text-muted font-medium">Output</th>
-            <th className="text-right px-3 py-2 text-text-muted font-medium">Coste</th>
+            <th className="text-left px-3 py-2 text-text-muted font-medium cursor-pointer hover:text-text-secondary select-none" onClick={() => toggle('project')}>Proyecto{indicator('project')}</th>
+            <th className="text-left px-3 py-2 text-text-muted font-medium cursor-pointer hover:text-text-secondary select-none" onClick={() => toggle('model')}>Modelo{indicator('model')}</th>
+            <th className="text-left px-3 py-2 text-text-muted font-medium cursor-pointer hover:text-text-secondary select-none" onClick={() => toggle('startTime')}>Inicio{indicator('startTime')}</th>
+            <th className="text-right px-3 py-2 text-text-muted font-medium cursor-pointer hover:text-text-secondary select-none" onClick={() => toggle('durationActiveMs')}>Duración{indicator('durationActiveMs')}</th>
+            <th className="text-right px-3 py-2 text-text-muted font-medium cursor-pointer hover:text-text-secondary select-none" onClick={() => toggle('tokensInput')}>Input{indicator('tokensInput')}</th>
+            <th className="text-right px-3 py-2 text-text-muted font-medium cursor-pointer hover:text-text-secondary select-none" onClick={() => toggle('tokensOutput')}>Output{indicator('tokensOutput')}</th>
+            <th className="text-right px-3 py-2 text-text-muted font-medium cursor-pointer hover:text-text-secondary select-none" onClick={() => toggle('cost')}>Coste{indicator('cost')}</th>
           </tr>
         </thead>
         <tbody>
-          {sessions.map(session => (
+          {sorted.map(session => (
             <Fragment key={session.sessionId}>
               <tr
                 className="border-b border-bg-border hover:bg-bg-card-hover cursor-pointer"
