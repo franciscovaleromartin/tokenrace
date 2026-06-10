@@ -5,6 +5,7 @@ import { SetupGuide } from './components/setup/SetupGuide'
 import { SessionLabelNotification } from './components/notifications/SessionLabelNotification'
 import { StatsRow } from './components/stats/StatsRow'
 import { TokensChart } from './components/charts/TokensChart'
+import { ActivityHeatmap } from './components/charts/ActivityHeatmap'
 import { CostChart } from './components/charts/CostChart'
 import { CacheChart } from './components/charts/CacheChart'
 import { EfficiencyChart } from './components/charts/EfficiencyChart'
@@ -168,6 +169,7 @@ export default function App() {
               onChange={setUserSelectedProject}
             />
             {summary && <StatsRow summary={summary} selectedProjectData={selectedProjectData} />}
+            <ActivityHeatmap sseVersion={sseVersion} />
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               <TokensChart timeRange={timeRange} sseVersion={sseVersion} />
               <CostChart timeRange={timeRange} sseVersion={sseVersion} />
