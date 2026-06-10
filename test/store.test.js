@@ -10,7 +10,7 @@
 import { test, beforeEach, after } from 'node:test'
 import assert from 'node:assert/strict'
 import { tmpdir } from 'node:os'
-import { mkdirSync, rmSync } from 'node:fs'
+import { mkdirSync, rmSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import {
   processMetric,
@@ -29,6 +29,8 @@ import {
   getTools,
   getAgents,
   getModels,
+  saveSync,
+  loadFromDisk,
   setDataPathForTesting
 } from '../src/store.js'
 
@@ -450,4 +452,54 @@ test('getAgents: ordena por coste descendente', () => {
 
   const agents = getAgents()
   assert.deepEqual(agents.map(a => a.name), ['caro', 'barato'])
+})
+
+// ─── Persistencia de modelos ──────────────────────────────────────────────────
+
+test('saveSync: persiste state.models en disco', () => {
+  const ts = Date.now()
+  processMetric({
+    name: 'claude_code.tokens.input',
+    value: 1000,
+    timestamp: ts,
+    labels: { 'session.id': 'sess-model', model: 'claude-fable-5' }
+  })
+  saveSync()
+
+  const data = JSON.parse(readFileSync(testDataFile, 'utf8'))
+  assert.ok(Array.isArray(data.models))
+  const entry = data.models.find(([name]) => name === 'claude-fable-5')
+  assert.ok(entry, 'el modelo debe estar en el archivo guardado')
+  assert.equal(entry[1].tokensInput, 1000)
+})
+
+test('loadFromDisk: restaura modelos persistidos', () => {
+  writeFileSync(testDataFile, JSON.stringify({
+    models: [['claude-test-x', { tokensInput: 10, tokensOutput: 20, cost: 3, requests: 4 }]]
+  }))
+  loadFromDisk()
+
+  const models = getModels()
+  const m = models.find(x => x.model === 'claude-test-x')
+  assert.ok(m, 'el modelo restaurado debe aparecer en getModels')
+  assert.equal(m.cost, 3)
+  assert.equal(m.requests, 4)
+})
+
+test('loadFromDisk: reconstruye modelos desde timeseries si el archivo no los trae', () => {
+  writeFileSync(testDataFile, JSON.stringify({
+    timeseries: [
+      ['claude_code.tokens.input',  [{ ts: 1, value: 500, labels: { model: 'claude-legacy', 'session.id': 's1' } }]],
+      ['claude_code.tokens.output', [{ ts: 2, value: 250, labels: { model: 'claude-legacy', 'session.id': 's1' } }]],
+      ['claude_code.cost',          [{ ts: 3, value: 1.5, labels: { model: 'claude-legacy', 'session.id': 's1' } }]]
+    ]
+  }))
+  loadFromDisk()
+
+  const models = getModels()
+  const m = models.find(x => x.model === 'claude-legacy')
+  assert.ok(m, 'el modelo reconstruido debe aparecer en getModels')
+  assert.equal(m.tokensInput, 500)
+  assert.equal(m.tokensOutput, 250)
+  assert.equal(m.cost, 1.5)
 })

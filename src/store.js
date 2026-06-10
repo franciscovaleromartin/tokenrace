@@ -221,6 +221,30 @@ function rebuildProjectAggregates() {
   }
 }
 
+/**
+ * Reconstruye state.models desde las timeseries (labels.model).
+ * Se usa al cargar datos guardados por versiones que no persistían modelos.
+ * `requests` no es reconstruible desde timeseries y queda en 0.
+ */
+function rebuildModelAggregates() {
+  const metricField = {
+    'claude_code.tokens.input':  'tokensInput',
+    'claude_code.tokens.output': 'tokensOutput',
+    'claude_code.cost':          'cost'
+  }
+
+  for (const [metricName, field] of Object.entries(metricField)) {
+    for (const point of state.timeseries.get(metricName) ?? []) {
+      const model = point.labels?.model
+      if (!model) continue
+      if (!state.models.has(model)) {
+        state.models.set(model, { tokensInput: 0, tokensOutput: 0, cost: 0, requests: 0 })
+      }
+      state.models.get(model)[field] += point.value
+    }
+  }
+}
+
 /** Debounce: guarda a disco en el siguiente tick */
 function scheduleSave() {
   setTimeout(() => saveSync(), 0)
@@ -946,7 +970,8 @@ export function saveSync() {
       eventIndex:       state.eventIndex,
       totalEvents:      state.totalEvents,
       startTime:        state.startTime,
-      tools:            Array.from(state.tools.entries())
+      tools:            Array.from(state.tools.entries()),
+      models:           Array.from(state.models.entries())
     }
 
     fs.writeFileSync(dataFile, JSON.stringify(data), { mode: 0o600 })
@@ -1022,6 +1047,16 @@ export function loadFromDisk() {
       for (const [toolName, stats] of data.tools) {
         state.tools.set(toolName, stats)
       }
+    }
+
+    // Restaurar stats de modelos; si el archivo es de una versión que no los
+    // persistía, reconstruirlos desde las timeseries
+    if (Array.isArray(data.models) && data.models.length > 0) {
+      for (const [model, stats] of data.models) {
+        state.models.set(model, stats)
+      }
+    } else {
+      rebuildModelAggregates()
     }
 
     // Re-aplicar mappings a sesiones (timeseries no necesitan propagación:

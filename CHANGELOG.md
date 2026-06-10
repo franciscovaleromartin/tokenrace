@@ -4,6 +4,13 @@ All notable changes to tokenrace are documented here.
 
 ---
 
+## [0.2.1] — 2026-06-10
+
+### Fixed
+- Models tab showed nothing after a server restart: per-model stats were never persisted to disk. `state.models` is now saved in `data.json`, and for data files written by older versions the stats are rebuilt from the stored timeseries (`requests` is not recoverable and starts at 0)
+
+---
+
 ## [0.2.0] — 2026-06-10
 
 ### Added
