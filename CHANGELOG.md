@@ -15,6 +15,9 @@ All notable changes to tokenrace are documented here.
 ### Fixed
 - Model price table updated: added Claude Fable 5 ($10/$50 per MTok) and corrected Opus 4.8 ($5/$25) and Haiku 4.5 ($1/$5)
 
+### Removed
+- `npx tokenrace` no longer opens a new terminal window automatically — it only starts the server and opens the dashboard
+
 ---
 
 ## [0.1.11] — 2026-06-03
