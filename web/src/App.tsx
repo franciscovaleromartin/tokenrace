@@ -87,17 +87,17 @@ function ProjectSelector({ autoDetected, userSelected, knownProjects, onChange }
               if (e.key === 'Escape') { setCreatingNew(false); setNewName('') }
             }}
             placeholder="nombre del proyecto"
-            className="bg-bg-base border border-bg-border rounded px-2 py-0.5 text-lg font-semibold text-text-primary outline-none focus:border-accent-green w-44"
+            className="bg-bg-base border border-bg-border rounded px-2 py-0.5 text-lg font-semibold text-text-primary outline-none focus:border-accent-cyan w-44"
           />
           <button onClick={confirmNew} className="text-xs text-accent-green hover:opacity-80 transition-opacity">✓</button>
-          <button onClick={() => { setCreatingNew(false); setNewName('') }} className="text-xs text-text-muted hover:text-accent-orange transition-colors">✕</button>
+          <button onClick={() => { setCreatingNew(false); setNewName('') }} className="text-xs text-text-muted hover:text-accent-red transition-colors">✕</button>
         </>
       ) : (
         <>
           <select
             value={effective ?? ''}
             onChange={handleSelectChange}
-            className="bg-bg-card border border-bg-border rounded px-2 py-0.5 text-lg font-semibold text-text-primary outline-none focus:border-accent-green cursor-pointer"
+            className="bg-bg-card border border-bg-border rounded px-2 py-0.5 text-lg font-semibold text-text-primary outline-none focus:border-accent-cyan cursor-pointer"
           >
             {options.map(p => (
               <option key={p} value={p}>{p}</option>

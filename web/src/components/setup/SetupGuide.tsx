@@ -24,7 +24,7 @@ export function SetupGuide() {
         {/* Logo y título */}
         <div className="text-center space-y-2">
           <div className="text-4xl font-mono font-bold">
-            <span className="text-accent-green">&lt;/&gt;</span>
+            <span className="text-accent-cyan">&lt;/&gt;</span>
             <span className="text-text-primary"> tokenrace</span>
           </div>
           <div className="flex items-center justify-center gap-2 text-text-secondary">
@@ -66,7 +66,7 @@ export function SetupGuide() {
         {/* Siguiente paso */}
         <div className="text-center">
           <p className="text-text-secondary text-sm">Luego:</p>
-          <code className="text-accent-green font-mono text-lg">claude</code>
+          <code className="text-accent-cyan font-mono text-lg">claude</code>
         </div>
       </div>
     </div>

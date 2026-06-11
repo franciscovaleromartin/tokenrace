@@ -134,7 +134,7 @@ export function SessionLabelNotification({ onLabeled }: SessionLabelNotification
                     <button
                       key={project}
                       onClick={() => labelSession(session.sessionId, project)}
-                      className="px-2 py-0.5 rounded text-xs bg-bg-card border border-bg-border text-text-secondary hover:border-accent-green hover:text-text-primary transition-colors"
+                      className="px-2 py-0.5 rounded text-xs bg-bg-card border border-bg-border text-text-secondary hover:border-accent-cyan hover:text-text-primary transition-colors"
                     >
                       {project}
                     </button>
@@ -154,7 +154,7 @@ export function SessionLabelNotification({ onLabeled }: SessionLabelNotification
                           if (e.key === 'Escape') setShowCustom(prev => ({ ...prev, [session.sessionId]: false }))
                         }}
                         placeholder="nombre del proyecto"
-                        className="bg-bg-base border border-bg-border rounded px-2 py-0.5 text-xs text-text-primary outline-none focus:border-accent-green w-32"
+                        className="bg-bg-base border border-bg-border rounded px-2 py-0.5 text-xs text-text-primary outline-none focus:border-accent-cyan w-32"
                       />
                       <button
                         onClick={() => {
@@ -169,7 +169,7 @@ export function SessionLabelNotification({ onLabeled }: SessionLabelNotification
                   ) : (
                     <button
                       onClick={() => setShowCustom(prev => ({ ...prev, [session.sessionId]: true }))}
-                      className="px-2 py-0.5 rounded text-xs bg-bg-card border border-bg-border text-text-secondary hover:border-accent-green transition-colors"
+                      className="px-2 py-0.5 rounded text-xs bg-bg-card border border-bg-border text-text-secondary hover:border-accent-cyan transition-colors"
                     >
                       + Nuevo
                     </button>
@@ -178,7 +178,7 @@ export function SessionLabelNotification({ onLabeled }: SessionLabelNotification
                   {/* Ignorar */}
                   <button
                     onClick={() => ignoreSession(session.sessionId)}
-                    className="px-2 py-0.5 rounded text-xs text-text-muted hover:text-accent-orange transition-colors flex items-center gap-1"
+                    className="px-2 py-0.5 rounded text-xs text-text-muted hover:text-accent-red transition-colors flex items-center gap-1"
                   >
                     <X size={10} />
                     Ignorar
