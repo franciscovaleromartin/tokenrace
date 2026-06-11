@@ -42,7 +42,6 @@ function NavButton({
   const isActive = activeTab === id
   return (
     <button
-      key={id}
       title={label}
       aria-label={label}
       aria-current={isActive ? 'page' : undefined}
