@@ -4,6 +4,13 @@ All notable changes to tokenrace are documented here.
 
 ---
 
+## [0.3.1] — 2026-06-12
+
+### Changed
+- **Sidebar lateral visible en todos los anchos de pantalla** — se elimina la barra inferior móvil; la navegación lateral de 52px se mantiene fija también en viewports estrechos
+
+---
+
 ## [0.3.0] — 2026-06-11
 
 ### Changed
