@@ -40,6 +40,7 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* Scrollbar oscura */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: #0b1218; }
 ::-webkit-scrollbar-thumb { background: #2a3947; border-radius: 3px; }
