@@ -5,7 +5,7 @@ import {
 import { api } from '../../api'
 import { useState, useEffect, useMemo } from 'react'
 import type { TimeRange, TimeseriesByProjectPoint } from '../../types'
-import { CHART_GRID, CHART_TICK, PROJECT_COLORS } from '../../utils/chartTheme'
+import { CHART_GRID, CHART_TEXT, CHART_TICK, PROJECT_COLORS } from '../../utils/chartTheme'
 
 interface CostChartProps {
   timeRange: TimeRange
@@ -68,7 +68,7 @@ export function CostChart({ timeRange, sseVersion }: CostChartProps) {
             tickFormatter={(v: number) => `$${v.toFixed(2)}`}
           />
           <Legend
-            wrapperStyle={{ fontSize: 11, color: '#8fa3b0', paddingTop: 8 }}
+            wrapperStyle={{ fontSize: 11, color: CHART_TEXT, paddingTop: 8 }}
             iconType="square"
             iconSize={8}
           />

@@ -5,7 +5,7 @@ import {
 import { api } from '../../api'
 import { useState, useEffect } from 'react'
 import type { TimeRange, TimeseriesPoint } from '../../types'
-import { CHART_GRID, CHART_TICK, CHART_TOOLTIP_STYLE, COLOR_INPUT, COLOR_OUTPUT } from '../../utils/chartTheme'
+import { CHART_GRID, CHART_TEXT, CHART_TICK, CHART_TOOLTIP_STYLE, COLOR_INPUT, COLOR_OUTPUT } from '../../utils/chartTheme'
 
 interface TokensChartProps {
   timeRange: TimeRange
@@ -85,10 +85,10 @@ export function TokensChart({ timeRange, sseVersion }: TokensChartProps) {
           />
           <Tooltip
             contentStyle={CHART_TOOLTIP_STYLE}
-            labelStyle={{ color: '#8fa3b0', fontSize: 12 }}
+            labelStyle={{ color: CHART_TEXT, fontSize: 12 }}
             itemStyle={{ fontSize: 12 }}
           />
-          <Legend wrapperStyle={{ fontSize: 12, color: '#8fa3b0' }} />
+          <Legend wrapperStyle={{ fontSize: 12, color: CHART_TEXT }} />
           <Area
             type="monotone"
             dataKey="input"

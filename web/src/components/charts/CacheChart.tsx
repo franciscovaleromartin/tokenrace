@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import { api } from '../../api'
 import type { TimeRange, TimeseriesPoint } from '../../types'
-import { CHART_GRID, CHART_TICK, CHART_TOOLTIP_STYLE, COLOR_INPUT } from '../../utils/chartTheme'
+import { CHART_GRID, CHART_TEXT, CHART_TICK, CHART_TOOLTIP_STYLE, COLOR_INPUT } from '../../utils/chartTheme'
 
 export function CacheChart({ timeRange, sseVersion }: { timeRange: TimeRange; sseVersion: number }) {
   const [readData, setReadData]     = useState<TimeseriesPoint[]>([])
@@ -43,7 +43,7 @@ export function CacheChart({ timeRange, sseVersion }: { timeRange: TimeRange; ss
           <YAxis tick={CHART_TICK} tickLine={false} axisLine={false}
             tickFormatter={(v: number) => v >= 1000 ? `${(v/1000).toFixed(0)}K` : String(v)} />
           <Tooltip contentStyle={CHART_TOOLTIP_STYLE} />
-          <Legend wrapperStyle={{ fontSize: 12, color: '#8fa3b0' }} />
+          <Legend wrapperStyle={{ fontSize: 12, color: CHART_TEXT }} />
           <Area type="monotone" dataKey="read"   name="Leído"  stroke="#00d4aa" fill="#00d4aa" fillOpacity={0.2} strokeWidth={2} />
           <Area type="monotone" dataKey="create" name="Creado" stroke={COLOR_INPUT} fill={COLOR_INPUT} fillOpacity={0.2} strokeWidth={2} />
         </AreaChart>

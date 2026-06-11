@@ -1,6 +1,7 @@
 /** Estilos compartidos para las gráficas recharts — paleta Dynatrace */
 export const CHART_GRID = '#2a3947'
-export const CHART_TICK = { fill: '#8fa3b0', fontSize: 11 }
+export const CHART_TEXT = '#8fa3b0'
+export const CHART_TICK = { fill: CHART_TEXT, fontSize: 11 }
 export const CHART_TOOLTIP_STYLE = {
   background: '#141d26',
   border: '1px solid #2a3947',
