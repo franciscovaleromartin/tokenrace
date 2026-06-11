@@ -32,9 +32,8 @@ function timeSince(ts: number | null): string {
 export function Header({ sectionTitle, timeRange, onTimeRangeChange, connected, lastSeen, onReset, liveRate }: HeaderProps) {
   return (
     <header className="h-10 flex items-center justify-between px-4 border-b border-bg-border bg-bg-base sticky top-0 z-40">
-      {/* Título de sección (el logo vive en el Sidebar; en móvil se muestra aquí) */}
+      {/* Título de sección (el logo vive en el Sidebar) */}
       <div className="flex items-center gap-2 text-sm font-semibold text-text-primary">
-        <span className="md:hidden text-accent-cyan font-mono">&lt;/&gt;</span>
         <span>{sectionTitle}</span>
       </div>
 

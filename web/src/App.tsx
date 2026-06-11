@@ -172,7 +172,7 @@ export default function App() {
   return (
     <div className="min-h-screen bg-bg-base text-text-primary flex">
       <Sidebar activeTab={activeTab} onTabChange={setActiveTab} />
-      <div className="flex-1 flex flex-col min-w-0 pb-14 md:pb-0">
+      <div className="flex-1 flex flex-col min-w-0">
         <Header
           sectionTitle={SECTION_TITLES[activeTab]}
           timeRange={timeRange}

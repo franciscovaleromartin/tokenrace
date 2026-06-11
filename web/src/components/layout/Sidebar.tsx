@@ -54,42 +54,23 @@ function NavButton({
 }
 
 export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
+  // Barra lateral fija a la izquierda — visible en todos los anchos
   return (
-    <>
-      {/* Desktop: barra lateral fija a la izquierda */}
-      <nav className="hidden md:flex flex-col items-center w-[52px] shrink-0 bg-bg-sidebar border-r border-bg-border sticky top-0 h-screen z-50">
-        <div className="py-4 text-accent-cyan font-mono font-bold text-sm">&lt;/&gt;</div>
-        {NAV.map(({ id, label, Icon }) => (
-          <NavButton
-            key={id}
-            id={id}
-            label={label}
-            Icon={Icon}
-            activeTab={activeTab}
-            onTabChange={onTabChange}
-            itemClassName="w-full flex justify-center py-3 border-l-2 transition-colors"
-            activeClassName="border-accent-cyan bg-bg-card text-accent-cyan"
-            inactiveClassName="border-transparent text-text-secondary hover:text-text-primary"
-          />
-        ))}
-      </nav>
-
-      {/* Móvil: barra inferior fija */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 flex bg-bg-sidebar border-t border-bg-border z-50">
-        {NAV.map(({ id, label, Icon }) => (
-          <NavButton
-            key={id}
-            id={id}
-            label={label}
-            Icon={Icon}
-            activeTab={activeTab}
-            onTabChange={onTabChange}
-            itemClassName="flex-1 flex justify-center py-3 border-t-2 transition-colors"
-            activeClassName="border-accent-cyan text-accent-cyan"
-            inactiveClassName="border-transparent text-text-secondary"
-          />
-        ))}
-      </nav>
-    </>
+    <nav className="flex flex-col items-center w-[52px] shrink-0 bg-bg-sidebar border-r border-bg-border sticky top-0 h-screen z-50">
+      <div className="py-4 text-accent-cyan font-mono font-bold text-sm">&lt;/&gt;</div>
+      {NAV.map(({ id, label, Icon }) => (
+        <NavButton
+          key={id}
+          id={id}
+          label={label}
+          Icon={Icon}
+          activeTab={activeTab}
+          onTabChange={onTabChange}
+          itemClassName="w-full flex justify-center py-3 border-l-2 transition-colors"
+          activeClassName="border-accent-cyan bg-bg-card text-accent-cyan"
+          inactiveClassName="border-transparent text-text-secondary hover:text-text-primary"
+        />
+      ))}
+    </nav>
   )
 }
