@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ReferenceLine, ResponsiveContainer } from 'recharts'
 import { api } from '../../api'
 import type { TimeRange, TimeseriesPoint } from '../../types'
+import { CHART_GRID, CHART_TICK, CHART_TOOLTIP_STYLE } from '../../utils/chartTheme'
 
 export function EfficiencyChart({ timeRange, sseVersion }: { timeRange: TimeRange; sseVersion: number }) {
   const [inputData, setInputData]   = useState<TimeseriesPoint[]>([])
@@ -40,16 +41,16 @@ export function EfficiencyChart({ timeRange, sseVersion }: { timeRange: TimeRang
       <h3 className="text-sm font-medium text-text-secondary mb-4">Ratio output/input</h3>
       <ResponsiveContainer width="100%" height={220}>
         <LineChart data={data} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#1a1a1a" />
-          <XAxis dataKey="label" tick={{ fill: '#888888', fontSize: 11 }} tickLine={false} axisLine={{ stroke: '#1a1a1a' }} />
-          <YAxis tick={{ fill: '#888888', fontSize: 11 }} tickLine={false} axisLine={false} domain={[0, 'auto']} />
+          <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID} />
+          <XAxis dataKey="label" tick={CHART_TICK} tickLine={false} axisLine={{ stroke: CHART_GRID }} />
+          <YAxis tick={CHART_TICK} tickLine={false} axisLine={false} domain={[0, 'auto']} />
           <Tooltip
-            contentStyle={{ background: '#0d0d0d', border: '1px solid #1a1a1a', borderRadius: '6px' }}
+            contentStyle={CHART_TOOLTIP_STYLE}
             formatter={(v: number) => [v.toFixed(3), 'Eficiencia']}
           />
-          <ReferenceLine y={0.5} stroke="#444444" strokeDasharray="4 4"
-            label={{ value: '0.5', fill: '#666', fontSize: 10 }} />
-          <Line type="monotone" dataKey="efficiency" stroke="#a855f7" strokeWidth={2} dot={false} />
+          <ReferenceLine y={0.5} stroke="#3b4d5e" strokeDasharray="4 4"
+            label={{ value: '0.5', fill: '#5a6e7a', fontSize: 10 }} />
+          <Line type="monotone" dataKey="efficiency" stroke="#c592f0" strokeWidth={2} dot={false} />
         </LineChart>
       </ResponsiveContainer>
     </div>

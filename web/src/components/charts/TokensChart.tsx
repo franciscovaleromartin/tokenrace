@@ -5,6 +5,7 @@ import {
 import { api } from '../../api'
 import { useState, useEffect } from 'react'
 import type { TimeRange, TimeseriesPoint } from '../../types'
+import { CHART_GRID, CHART_TICK, CHART_TOOLTIP_STYLE, COLOR_INPUT, COLOR_OUTPUT } from '../../utils/chartTheme'
 
 interface TokensChartProps {
   timeRange: TimeRange
@@ -61,38 +62,38 @@ export function TokensChart({ timeRange, sseVersion }: TokensChartProps) {
         <AreaChart data={data} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
           <defs>
             <linearGradient id="colorInput" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%"  stopColor="#4da6ff" stopOpacity={0.3} />
-              <stop offset="95%" stopColor="#4da6ff" stopOpacity={0.0} />
+              <stop offset="5%"  stopColor={COLOR_INPUT} stopOpacity={0.3} />
+              <stop offset="95%" stopColor={COLOR_INPUT} stopOpacity={0.0} />
             </linearGradient>
             <linearGradient id="colorOutput" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%"  stopColor="#00ff88" stopOpacity={0.3} />
-              <stop offset="95%" stopColor="#00ff88" stopOpacity={0.0} />
+              <stop offset="5%"  stopColor={COLOR_OUTPUT} stopOpacity={0.3} />
+              <stop offset="95%" stopColor={COLOR_OUTPUT} stopOpacity={0.0} />
             </linearGradient>
           </defs>
-          <CartesianGrid strokeDasharray="3 3" stroke="#1a1a1a" />
+          <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID} />
           <XAxis
             dataKey="label"
-            tick={{ fill: '#888888', fontSize: 11 }}
+            tick={CHART_TICK}
             tickLine={false}
-            axisLine={{ stroke: '#1a1a1a' }}
+            axisLine={{ stroke: CHART_GRID }}
           />
           <YAxis
-            tick={{ fill: '#888888', fontSize: 11 }}
+            tick={CHART_TICK}
             tickLine={false}
             axisLine={false}
             tickFormatter={(v: number) => v >= 1000 ? `${(v/1000).toFixed(0)}K` : String(v)}
           />
           <Tooltip
-            contentStyle={{ background: '#0d0d0d', border: '1px solid #1a1a1a', borderRadius: '6px' }}
-            labelStyle={{ color: '#888888', fontSize: 12 }}
+            contentStyle={CHART_TOOLTIP_STYLE}
+            labelStyle={{ color: '#8fa3b0', fontSize: 12 }}
             itemStyle={{ fontSize: 12 }}
           />
-          <Legend wrapperStyle={{ fontSize: 12, color: '#888888' }} />
+          <Legend wrapperStyle={{ fontSize: 12, color: '#8fa3b0' }} />
           <Area
             type="monotone"
             dataKey="input"
             name="Input"
-            stroke="#4da6ff"
+            stroke={COLOR_INPUT}
             fill="url(#colorInput)"
             strokeWidth={2}
           />
@@ -100,7 +101,7 @@ export function TokensChart({ timeRange, sseVersion }: TokensChartProps) {
             type="monotone"
             dataKey="output"
             name="Output"
-            stroke="#00ff88"
+            stroke={COLOR_OUTPUT}
             fill="url(#colorOutput)"
             strokeWidth={2}
           />

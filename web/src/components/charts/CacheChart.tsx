@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import { api } from '../../api'
 import type { TimeRange, TimeseriesPoint } from '../../types'
+import { CHART_GRID, CHART_TICK, CHART_TOOLTIP_STYLE, COLOR_INPUT } from '../../utils/chartTheme'
 
 export function CacheChart({ timeRange, sseVersion }: { timeRange: TimeRange; sseVersion: number }) {
   const [readData, setReadData]     = useState<TimeseriesPoint[]>([])
@@ -37,14 +38,14 @@ export function CacheChart({ timeRange, sseVersion }: { timeRange: TimeRange; ss
       <h3 className="text-sm font-medium text-text-secondary mb-4">Tokens de caché</h3>
       <ResponsiveContainer width="100%" height={220}>
         <AreaChart data={data} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#1a1a1a" />
-          <XAxis dataKey="label" tick={{ fill: '#888888', fontSize: 11 }} tickLine={false} axisLine={{ stroke: '#1a1a1a' }} />
-          <YAxis tick={{ fill: '#888888', fontSize: 11 }} tickLine={false} axisLine={false}
+          <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID} />
+          <XAxis dataKey="label" tick={CHART_TICK} tickLine={false} axisLine={{ stroke: CHART_GRID }} />
+          <YAxis tick={CHART_TICK} tickLine={false} axisLine={false}
             tickFormatter={(v: number) => v >= 1000 ? `${(v/1000).toFixed(0)}K` : String(v)} />
-          <Tooltip contentStyle={{ background: '#0d0d0d', border: '1px solid #1a1a1a', borderRadius: '6px' }} />
-          <Legend wrapperStyle={{ fontSize: 12, color: '#888888' }} />
+          <Tooltip contentStyle={CHART_TOOLTIP_STYLE} />
+          <Legend wrapperStyle={{ fontSize: 12, color: '#8fa3b0' }} />
           <Area type="monotone" dataKey="read"   name="Leído"  stroke="#00d4aa" fill="#00d4aa" fillOpacity={0.2} strokeWidth={2} />
-          <Area type="monotone" dataKey="create" name="Creado" stroke="#4da6ff" fill="#4da6ff" fillOpacity={0.2} strokeWidth={2} />
+          <Area type="monotone" dataKey="create" name="Creado" stroke={COLOR_INPUT} fill={COLOR_INPUT} fillOpacity={0.2} strokeWidth={2} />
         </AreaChart>
       </ResponsiveContainer>
     </div>

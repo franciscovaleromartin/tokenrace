@@ -5,16 +5,12 @@ import {
 import { api } from '../../api'
 import { useState, useEffect, useMemo } from 'react'
 import type { TimeRange, TimeseriesByProjectPoint } from '../../types'
+import { CHART_GRID, CHART_TICK, PROJECT_COLORS } from '../../utils/chartTheme'
 
 interface CostChartProps {
   timeRange: TimeRange
   sseVersion: number
 }
-
-const PROJECT_COLORS = [
-  '#a855f7', '#3b82f6', '#10b981', '#f59e0b', '#ef4444',
-  '#06b6d4', '#f97316', '#84cc16', '#ec4899', '#8b5cf6',
-]
 
 function formatDay(ts: number): string {
   return new Date(ts).toLocaleDateString('es', { day: 'numeric', month: 'short' })
@@ -58,21 +54,21 @@ export function CostChart({ timeRange, sseVersion }: CostChartProps) {
       <h3 className="text-sm font-medium text-text-secondary mb-4">Coste por día ($)</h3>
       <ResponsiveContainer width="100%" height={220}>
         <BarChart data={chartData} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#1a1a1a" vertical={false} />
+          <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID} vertical={false} />
           <XAxis
             dataKey="label"
-            tick={{ fill: '#888888', fontSize: 11 }}
+            tick={CHART_TICK}
             tickLine={false}
-            axisLine={{ stroke: '#1a1a1a' }}
+            axisLine={{ stroke: CHART_GRID }}
           />
           <YAxis
-            tick={{ fill: '#888888', fontSize: 11 }}
+            tick={CHART_TICK}
             tickLine={false}
             axisLine={false}
             tickFormatter={(v: number) => `$${v.toFixed(2)}`}
           />
           <Legend
-            wrapperStyle={{ fontSize: 11, color: '#888888', paddingTop: 8 }}
+            wrapperStyle={{ fontSize: 11, color: '#8fa3b0', paddingTop: 8 }}
             iconType="square"
             iconSize={8}
           />

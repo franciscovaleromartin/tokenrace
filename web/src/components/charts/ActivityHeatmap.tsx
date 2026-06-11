@@ -19,8 +19,8 @@ interface TooltipData {
 }
 
 const DAY_MS = 86_400_000
-// Escala de naranjas del tema: apagado → máxima intensidad
-const LEVEL_COLORS = ['#2a1d15', '#5c3a22', '#a05a2c', '#e07b39', '#ff8c4a']
+// Escala de azules del tema: apagado → máxima intensidad
+const LEVEL_COLORS = ['#11202c', '#16384c', '#1b5675', '#0e7fb0', '#00a8e8']
 const CELL = 11
 const GAP = 3
 const STEP = CELL + GAP
@@ -190,8 +190,8 @@ export function ActivityHeatmap({ sseVersion }: ActivityHeatmapProps) {
                 left: tooltip.x,
                 top: tooltip.y,
                 transform: tooltip.below ? 'translate(-50%, 0)' : 'translate(-50%, -100%)',
-                background: '#0d0d0d',
-                border: '1px solid #1a1a1a',
+                background: '#141d26',
+                border: '1px solid #2a3947',
               }}
             >
               <div className="text-text-primary font-medium capitalize">{tooltip.label}</div>
