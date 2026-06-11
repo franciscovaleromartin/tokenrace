@@ -4,6 +4,19 @@ All notable changes to tokenrace are documented here.
 
 ---
 
+## [0.3.0] — 2026-06-11
+
+### Changed
+- **Rediseño visual completo estilo Dynatrace** — paleta azul-marino (`#0b1218`) con acento cian, paneles con borde fino azulado y mayor densidad de información
+- **Sidebar de iconos** sustituye a las pestañas superiores: lateral en desktop, barra inferior en móvil; el header muestra el título de la sección activa
+- **Overview como hub** — 6 KPIs clicables que navegan a su sección + grid 3×2 con gráficas compactas, ahorro de caché y paneles "Ver todo →" (sesiones recientes, top proyectos, eventos recientes)
+- Gráficas recharts con tema compartido de la paleta nueva (`chartTheme.ts`)
+
+### Added
+- **Mini-fila de KPIs propios en cada pestaña** (Sessions, Projects, Tools, Models, Agents, Events) con totales y destacados
+
+---
+
 ## [0.2.3] — 2026-06-10
 
 ### Fixed
