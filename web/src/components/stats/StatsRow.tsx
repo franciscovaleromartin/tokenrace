@@ -2,19 +2,19 @@ import { useState, useEffect } from 'react'
 import { StatCard } from './StatCard'
 import { formatNumber, formatCost, formatDuration } from '../../utils/format'
 import { api } from '../../api'
-import type { Summary, Project, TimeRange, TimeseriesPoint } from '../../types'
+import type { Summary, Project, TimeRange, TimeseriesPoint, TabId } from '../../types'
 
 interface StatsRowProps {
   summary: Summary
   selectedProjectData: Project | null
   timeRange: TimeRange
   sseVersion: number
+  onNavigate: (tab: TabId) => void
 }
 
 interface Trends {
   input?: number
   output?: number
-  total?: number
   cost?: number
 }
 
@@ -41,7 +41,7 @@ function pctChange(prev: number, cur: number): number | undefined {
   return ((cur - prev) / prev) * 100
 }
 
-export function StatsRow({ summary, selectedProjectData, timeRange, sseVersion }: StatsRowProps) {
+export function StatsRow({ summary, selectedProjectData, timeRange, sseVersion, onNavigate }: StatsRowProps) {
   const [trends, setTrends] = useState<Trends>({})
 
   useEffect(() => {
@@ -62,7 +62,6 @@ export function StatsRow({ summary, selectedProjectData, timeRange, sseVersion }
       setTrends({
         input:  pctChange(pi, ci),
         output: pctChange(po, co),
-        total:  pctChange(pi + po, ci + co),
         cost:   pctChange(pc, cc),
       })
     }).catch(() => setTrends({}))
@@ -70,62 +69,56 @@ export function StatsRow({ summary, selectedProjectData, timeRange, sseVersion }
 
   const inputTokens  = selectedProjectData?.tokensInput  ?? summary.tokens.input
   const outputTokens = selectedProjectData?.tokensOutput ?? summary.tokens.output
-  const totalTokens  = summary.tokens.input + summary.tokens.output
 
   const stats = [
     {
       label: 'Tokens Input',
       value: formatNumber(inputTokens),
-      accent: 'text-accent-blue',
+      accent: 'text-accent-cyan',
       delta: trends.input,
       sublabel: selectedProjectData
         ? `hit rate: ${(selectedProjectData.cacheHitRate * 100).toFixed(1)}%`
-        : `caché: ${formatNumber(summary.tokens.cache)}`
+        : `caché: ${formatNumber(summary.tokens.cache)}`,
+      onClick: () => onNavigate('costs'),
     },
     {
       label: 'Tokens Output',
       value: formatNumber(outputTokens),
       accent: 'text-accent-green',
       delta: trends.output,
-      sublabel: `eficiencia: ${(summary.efficiency * 100).toFixed(1)}%`
-    },
-    {
-      label: 'Token total',
-      value: formatNumber(totalTokens),
-      accent: 'text-accent-teal',
-      delta: trends.total,
-      sublabel: `i: ${formatNumber(summary.tokens.input)} / o: ${formatNumber(summary.tokens.output)}`
-    },
-    {
-      label: 'Coste de proyecto',
-      value: selectedProjectData ? formatCost(selectedProjectData.cost) : '—',
-      accent: 'text-accent-orange',
+      sublabel: `eficiencia: ${(summary.efficiency * 100).toFixed(1)}%`,
+      onClick: () => onNavigate('costs'),
     },
     {
       label: 'Coste Total',
       value: formatCost(summary.cost),
-      accent: 'text-accent-purple',
+      accent: 'text-accent-yellow',
       delta: trends.cost,
-    },
-    {
-      label: 'Tiempo Activo',
-      value: formatDuration(summary.activeTimeMs),
-      accent: 'text-text-secondary',
+      sublabel: selectedProjectData ? `proyecto: ${formatCost(selectedProjectData.cost)}` : undefined,
+      onClick: () => onNavigate('costs'),
     },
     {
       label: 'Sesiones',
       value: String(summary.sessions),
-      accent: 'text-text-primary',
+      accent: 'text-accent-purple',
+      onClick: () => onNavigate('sessions'),
+    },
+    {
+      label: 'Tiempo Activo',
+      value: formatDuration(summary.activeTimeMs),
+      accent: 'text-accent-blue',
+      onClick: () => onNavigate('sessions'),
     },
     {
       label: 'Commits',
       value: String(summary.commits),
-      accent: 'text-accent-yellow',
+      accent: 'text-accent-orange',
+      onClick: () => onNavigate('events'),
     },
   ]
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
       {stats.map(stat => (
         <StatCard key={stat.label} {...stat} />
       ))}

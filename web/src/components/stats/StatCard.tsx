@@ -4,16 +4,22 @@ interface StatCardProps {
   accent: string
   sublabel?: string
   delta?: number
+  onClick?: () => void
 }
 
-export function StatCard({ label, value, accent, sublabel, delta }: StatCardProps) {
+export function StatCard({ label, value, accent, sublabel, delta, onClick }: StatCardProps) {
   return (
-    <div className="bg-bg-card border border-bg-border rounded-lg p-4 flex flex-col gap-1">
+    <div
+      onClick={onClick}
+      className={`bg-bg-card border border-bg-border rounded-lg p-4 flex flex-col gap-1 ${
+        onClick ? 'cursor-pointer hover:bg-bg-card-hover hover:border-accent-cyan/40 transition-colors' : ''
+      }`}
+    >
       <span className="text-xs text-text-secondary uppercase tracking-wider">{label}</span>
       <span className={`text-2xl font-mono font-bold ${accent}`}>{value}</span>
       <div className="flex items-baseline gap-2">
         {delta !== undefined && (
-          <span className={`text-xs font-mono ${delta >= 0 ? 'text-accent-teal' : 'text-accent-orange'}`}>
+          <span className={`text-xs font-mono ${delta >= 0 ? 'text-accent-green' : 'text-accent-red'}`}>
             {delta >= 0 ? '▲ +' : '▼ '}{delta.toFixed(1)}%
           </span>
         )}

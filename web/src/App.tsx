@@ -15,6 +15,10 @@ import { ToolsTable } from './components/tables/ToolsTable'
 import { ModelsTable } from './components/tables/ModelsTable'
 import { EventsFeed } from './components/events/EventsFeed'
 import { AgentsList } from './components/agents/AgentsList'
+import { RecentSessionsPanel } from './components/overview/RecentSessionsPanel'
+import { TopProjectsPanel } from './components/overview/TopProjectsPanel'
+import { RecentEventsPanel } from './components/overview/RecentEventsPanel'
+import { CacheSavingsPanel } from './components/overview/CacheSavingsPanel'
 import { useTimeRange } from './hooks/useTimeRange'
 import { useMetrics } from './hooks/useMetrics'
 import { useLiveRate } from './hooks/useLiveRate'
@@ -198,11 +202,16 @@ export default function App() {
                 selectedProjectData={selectedProjectData}
                 timeRange={timeRange}
                 sseVersion={sseVersion}
+                onNavigate={setActiveTab}
               />
             )}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              <TokensChart timeRange={timeRange} sseVersion={sseVersion} />
-              <CostChart timeRange={timeRange} sseVersion={sseVersion} />
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <TokensChart compact timeRange={timeRange} sseVersion={sseVersion} />
+              <CostChart compact timeRange={timeRange} sseVersion={sseVersion} />
+              {summary && <CacheSavingsPanel summary={summary} />}
+              <RecentSessionsPanel sseVersion={sseVersion} onViewAll={() => setActiveTab('sessions')} />
+              <TopProjectsPanel timeRange={timeRange} sseVersion={sseVersion} onViewAll={() => setActiveTab('projects')} />
+              <RecentEventsPanel sseVersion={sseVersion} onViewAll={() => setActiveTab('events')} />
             </div>
             <ActivityHeatmap sseVersion={sseVersion} />
           </div>
