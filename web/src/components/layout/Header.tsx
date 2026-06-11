@@ -4,6 +4,7 @@ import type { TimeRange } from '../../types'
 import type { LiveRate } from '../../hooks/useLiveRate'
 
 interface HeaderProps {
+  sectionTitle: string
   timeRange: TimeRange
   onTimeRangeChange: (range: TimeRange) => void
   connected: boolean
@@ -28,27 +29,27 @@ function timeSince(ts: number | null): string {
   return `hace ${Math.floor(diff / 86_400_000)}d`
 }
 
-export function Header({ timeRange, onTimeRangeChange, connected, lastSeen, onReset, liveRate }: HeaderProps) {
+export function Header({ sectionTitle, timeRange, onTimeRangeChange, connected, lastSeen, onReset, liveRate }: HeaderProps) {
   return (
     <header className="h-10 flex items-center justify-between px-4 border-b border-bg-border bg-bg-base sticky top-0 z-50">
-      {/* Logo */}
-      <div className="flex items-center gap-2 text-sm font-mono font-semibold text-text-primary">
-        <span className="text-accent-green">&lt;/&gt;</span>
-        <span>tokenrace</span>
+      {/* Título de sección (el logo vive en el Sidebar; en móvil se muestra aquí) */}
+      <div className="flex items-center gap-2 text-sm font-semibold text-text-primary">
+        <span className="md:hidden text-accent-cyan font-mono">&lt;/&gt;</span>
+        <span>{sectionTitle}</span>
       </div>
 
       {/* Live indicator + velocímetro */}
       <div className="flex items-center gap-2 text-xs">
         <span
-          className={`inline-block w-2 h-2 rounded-full ${connected ? 'bg-accent-green animate-pulse' : 'bg-text-muted'}`}
+          className={`inline-block w-2 h-2 rounded-full ${connected ? 'bg-accent-red animate-pulse' : 'bg-text-muted'}`}
         />
-        <span className={connected ? 'text-accent-green' : 'text-text-muted'}>
+        <span className={connected ? 'text-accent-red' : 'text-text-muted'}>
           {connected ? 'LIVE' : 'SIN DATOS'}
         </span>
         <span className="text-text-muted">{timeSince(lastSeen)}</span>
         {liveRate.tokensPerMin > 0 && (
           <span className="hidden sm:flex items-center gap-2 ml-2 font-mono">
-            <span className="text-accent-orange">⚡ {formatNumber(liveRate.tokensPerMin)} tok/min</span>
+            <span className="text-accent-cyan">⚡ {formatNumber(liveRate.tokensPerMin)} tok/min</span>
             <span className="text-accent-purple">{formatCost(liveRate.costPerHour)}/h</span>
           </span>
         )}
@@ -64,7 +65,7 @@ export function Header({ timeRange, onTimeRangeChange, connected, lastSeen, onRe
               onClick={() => onTimeRangeChange(value)}
               className={`px-2 py-1 rounded text-xs font-mono transition-colors ${
                 timeRange === value
-                  ? 'bg-accent-green text-black font-semibold'
+                  ? 'bg-accent-cyan text-bg-base font-semibold'
                   : 'text-text-secondary hover:text-text-primary hover:bg-bg-card'
               }`}
             >

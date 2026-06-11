@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from 'react'
 import { Header } from './components/layout/Header'
-import { TabBar } from './components/layout/TabBar'
+import { Sidebar } from './components/layout/Sidebar'
 import { SetupGuide } from './components/setup/SetupGuide'
 import { SessionLabelNotification } from './components/notifications/SessionLabelNotification'
 import { StatsRow } from './components/stats/StatsRow'
@@ -22,6 +22,17 @@ import { api } from './api'
 import { formatCost, formatNumber } from './utils/format'
 import { estimateCacheSavings } from './utils/prices'
 import type { TabId, Project } from './types'
+
+const SECTION_TITLES: Record<TabId, string> = {
+  overview: 'Overview',
+  sessions: 'Sessions',
+  projects: 'Projects',
+  tools:    'Tools',
+  agents:   'Agents',
+  models:   'Models',
+  events:   'Events',
+  costs:    'Costs',
+}
 
 interface ProjectSelectorProps {
   autoDetected: string | null
@@ -138,6 +149,7 @@ export default function App() {
     return (
       <div className="min-h-screen bg-bg-base text-text-primary flex flex-col">
         <Header
+          sectionTitle="Setup"
           timeRange={timeRange}
           onTimeRangeChange={setTimeRange}
           connected={false}
@@ -154,22 +166,23 @@ export default function App() {
   const selectedProjectData = projectsData.find(p => p.project === effectiveProject) ?? null
 
   return (
-    <div className="min-h-screen bg-bg-base text-text-primary flex flex-col">
-      <Header
-        timeRange={timeRange}
-        onTimeRangeChange={setTimeRange}
-        connected={status.connected}
-        lastSeen={status.lastSeen}
-        onReset={handleReset}
-        liveRate={liveRate}
-      />
+    <div className="min-h-screen bg-bg-base text-text-primary flex">
+      <Sidebar activeTab={activeTab} onTabChange={setActiveTab} />
+      <div className="flex-1 flex flex-col min-w-0 pb-14 md:pb-0">
+        <Header
+          sectionTitle={SECTION_TITLES[activeTab]}
+          timeRange={timeRange}
+          onTimeRangeChange={setTimeRange}
+          connected={status.connected}
+          lastSeen={status.lastSeen}
+          onReset={handleReset}
+          liveRate={liveRate}
+        />
 
-      {/* Zona de notificaciones — solo aparece si hay sesiones sin etiquetar */}
-      <SessionLabelNotification onLabeled={refetch} />
+        {/* Zona de notificaciones — solo aparece si hay sesiones sin etiquetar */}
+        <SessionLabelNotification onLabeled={refetch} />
 
-      <TabBar activeTab={activeTab} onTabChange={setActiveTab} />
-
-      <main className="flex-1 p-4 max-w-screen-2xl mx-auto w-full">
+        <main className="flex-1 p-4 max-w-screen-2xl mx-auto w-full">
 
         {activeTab === 'overview' && (
           <div className="flex flex-col gap-4">
@@ -231,7 +244,8 @@ export default function App() {
           </div>
         )}
 
-      </main>
+        </main>
+      </div>
     </div>
   )
 }
