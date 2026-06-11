@@ -3,6 +3,7 @@ import { Trash2 } from 'lucide-react'
 import { api } from '../../api'
 import { formatNumber, formatCost } from '../../utils/format'
 import { useSort } from '../../hooks/useSort'
+import { TabStats } from '../stats/TabStats'
 import type { Project, TimeRange } from '../../types'
 
 interface ProjectsTableProps {
@@ -40,6 +41,12 @@ export function ProjectsTable({ timeRange, sseVersion }: ProjectsTableProps) {
 
   return (
     <div className="flex flex-col gap-4">
+      <TabStats stats={[
+        { label: 'Proyectos', value: String(projects.length), accent: 'text-accent-cyan' },
+        { label: 'Coste total', value: formatCost(projects.reduce((s, p) => s + p.cost, 0)), accent: 'text-accent-yellow' },
+        { label: 'Más caro', value: projects.length > 0 ? [...projects].sort((a, b) => b.cost - a.cost)[0].project : '—', accent: 'text-accent-orange' },
+      ]} />
+
       <div className="bg-bg-card border border-bg-border rounded-lg p-4 space-y-3">
         {projects.map(p => (
           <div key={p.project}>

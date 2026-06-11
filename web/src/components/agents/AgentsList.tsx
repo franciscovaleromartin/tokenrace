@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { api } from '../../api'
 import { formatCost, formatNumber } from '../../utils/format'
+import { TabStats } from '../stats/TabStats'
 import type { Agent } from '../../types'
 
 export function AgentsList({ sseVersion }: { sseVersion: number }) {
@@ -21,7 +22,14 @@ export function AgentsList({ sseVersion }: { sseVersion: number }) {
   }
 
   return (
-    <div className="bg-bg-card border border-bg-border rounded-lg overflow-hidden">
+    <>
+      <TabStats stats={[
+        { label: 'Agentes', value: String(agents.length), accent: 'text-accent-cyan' },
+        { label: 'Tokens totales', value: formatNumber(agents.reduce((s, a) => s + a.tokensInput + a.tokensOutput, 0)), accent: 'text-accent-green' },
+        { label: 'Más activo', value: agents.length > 0 ? [...agents].sort((a, b) => (b.tokensInput + b.tokensOutput) - (a.tokensInput + a.tokensOutput))[0].name : '—', accent: 'text-accent-purple' },
+      ]} />
+
+      <div className="bg-bg-card border border-bg-border rounded-lg overflow-hidden">
       <div className="px-3 py-2 border-b border-bg-border grid grid-cols-4 text-xs text-text-muted">
         <span>Agente</span><span>Input</span><span>Output</span><span>Coste</span>
       </div>
@@ -33,6 +41,7 @@ export function AgentsList({ sseVersion }: { sseVersion: number }) {
           <span className="font-mono text-accent-purple">{formatCost(agent.cost)}</span>
         </div>
       ))}
-    </div>
+      </div>
+    </>
   )
 }

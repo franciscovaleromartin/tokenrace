@@ -3,6 +3,7 @@ import { ChevronDown, ChevronRight, Edit2, Check, X } from 'lucide-react'
 import { api } from '../../api'
 import { formatDuration, formatRelativeTime, formatNumber, formatCost } from '../../utils/format'
 import { useSort } from '../../hooks/useSort'
+import { TabStats } from '../stats/TabStats'
 import type { Session, Event, TimeRange } from '../../types'
 
 interface SessionsTableProps {
@@ -59,8 +60,19 @@ export function SessionsTable({ timeRange, sseVersion }: SessionsTableProps) {
     return <div className="text-text-muted text-sm p-4">Sin sesiones registradas</div>
   }
 
+  const totalCost = sessions.reduce((s, x) => s + x.cost, 0)
+  const avgDuration = sessions.length > 0
+    ? sessions.reduce((s, x) => s + x.durationActiveMs, 0) / sessions.length
+    : 0
+
   return (
     <div className="flex flex-col gap-3">
+      <TabStats stats={[
+        { label: 'Sesiones', value: String(sessions.length), accent: 'text-accent-purple' },
+        { label: 'Coste total', value: formatCost(totalCost), accent: 'text-accent-yellow' },
+        { label: 'Duración media', value: formatDuration(avgDuration), accent: 'text-accent-blue' },
+      ]} />
+
       {/* Filtro por proyecto */}
       {knownProjects.length > 0 && (
         <div className="flex items-center gap-2">

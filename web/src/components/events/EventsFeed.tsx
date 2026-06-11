@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react'
 import { Pause, Play } from 'lucide-react'
 import { api } from '../../api'
 import { getPrices } from '../../utils/prices'
+import { formatRelativeTime, formatNumber } from '../../utils/format'
+import { TabStats } from '../stats/TabStats'
 import type { Event, TimeRange } from '../../types'
 
 type EventFilter = 'all' | 'api' | 'tools' | 'prompts' | 'errors'
@@ -74,7 +76,14 @@ export function EventsFeed({ timeRange, sseVersion }: { timeRange: TimeRange; ss
   const filtered = events.filter(ev => matchesFilter(ev, filter))
 
   return (
-    <div className="bg-bg-card border border-bg-border rounded-lg flex flex-col h-[600px]">
+    <>
+      <TabStats stats={[
+        { label: 'Eventos', value: formatNumber(events.length), accent: 'text-accent-cyan' },
+        { label: 'Errores', value: String(events.filter(e => e.eventName.includes('error')).length), accent: 'text-accent-red' },
+        { label: 'Último evento', value: events.length > 0 ? formatRelativeTime(events[0].timestamp) : '—', accent: 'text-accent-blue' },
+      ]} />
+
+      <div className="bg-bg-card border border-bg-border rounded-lg flex flex-col h-[600px]">
       <div className="flex items-center gap-2 px-4 py-2 border-b border-bg-border flex-wrap">
         {FILTERS.map(({ id, label }) => (
           <button
@@ -121,6 +130,7 @@ export function EventsFeed({ timeRange, sseVersion }: { timeRange: TimeRange; ss
           })
         }
       </div>
-    </div>
+      </div>
+    </>
   )
 }

@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react'
 import { api } from '../../api'
+import { formatNumber } from '../../utils/format'
+import { TabStats } from '../stats/TabStats'
 import type { ToolsData, TimeRange } from '../../types'
 
 interface ToolsTableProps {
@@ -24,6 +26,12 @@ export function ToolsTable({ timeRange, sseVersion }: ToolsTableProps) {
 
   return (
     <div className="flex flex-col gap-4">
+      <TabStats stats={[
+        { label: 'Herramientas', value: String(data.usage.length), accent: 'text-accent-cyan' },
+        { label: 'Invocaciones', value: formatNumber(data.usage.reduce((s, t) => s + t.count, 0)), accent: 'text-accent-green' },
+        { label: 'Más usada', value: data.usage.length > 0 ? [...data.usage].sort((a, b) => b.count - a.count)[0].toolName : '—', accent: 'text-accent-purple' },
+      ]} />
+
       <div className="bg-bg-card border border-bg-border rounded-lg p-4">
         <span className="text-text-secondary text-sm">Tasa de aprobación: </span>
         <span className="text-accent-green font-mono font-bold">{approvalRate}%</span>

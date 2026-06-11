@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { api } from '../../api'
 import { formatNumber, formatCost } from '../../utils/format'
+import { TabStats } from '../stats/TabStats'
 import type { ModelStats, TimeRange } from '../../types'
 
 interface ModelsTableProps {
@@ -30,7 +31,14 @@ export function ModelsTable({ timeRange, sseVersion }: ModelsTableProps) {
   const totalCost = models.reduce((acc, m) => acc + m.cost, 0)
 
   return (
-    <div className="bg-bg-card border border-bg-border rounded-lg p-4">
+    <>
+      <TabStats stats={[
+        { label: 'Modelos', value: String(models.length), accent: 'text-accent-cyan' },
+        { label: 'Coste total', value: formatCost(models.reduce((s, m) => s + m.cost, 0)), accent: 'text-accent-yellow' },
+        { label: 'Dominante', value: models.length > 0 ? [...models].sort((a, b) => b.cost - a.cost)[0].model : '—', accent: 'text-accent-purple' },
+      ]} />
+
+      <div className="bg-bg-card border border-bg-border rounded-lg p-4">
       <div className="flex justify-between items-baseline mb-4">
         <h3 className="text-sm font-medium text-text-secondary">Coste por modelo</h3>
         <span className="text-xs text-text-muted">{RANGE_LABEL[timeRange]}</span>
@@ -70,6 +78,7 @@ export function ModelsTable({ timeRange, sseVersion }: ModelsTableProps) {
           ))}
         </tbody>
       </table>
-    </div>
+      </div>
+    </>
   )
 }
