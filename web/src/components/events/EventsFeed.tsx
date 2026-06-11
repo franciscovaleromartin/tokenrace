@@ -91,7 +91,7 @@ export function EventsFeed({ timeRange, sseVersion }: { timeRange: TimeRange; ss
             onClick={() => setFilter(id)}
             className={`px-2 py-1 rounded text-xs transition-colors ${
               filter === id
-                ? 'bg-accent-green text-black font-medium'
+                ? 'bg-accent-cyan text-bg-base font-medium'
                 : 'text-text-secondary hover:text-text-primary'
             }`}
           >
