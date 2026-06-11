@@ -10,6 +10,7 @@ import { CHART_GRID, CHART_TEXT, CHART_TICK, CHART_TOOLTIP_STYLE, COLOR_INPUT, C
 interface TokensChartProps {
   timeRange: TimeRange
   sseVersion: number
+  compact?: boolean
 }
 
 function formatLabel(ts: number): string {
@@ -17,7 +18,7 @@ function formatLabel(ts: number): string {
   return d.toLocaleString('es', { hour: '2-digit', minute: '2-digit', day: 'numeric', month: 'short' })
 }
 
-export function TokensChart({ timeRange, sseVersion }: TokensChartProps) {
+export function TokensChart({ timeRange, sseVersion, compact = false }: TokensChartProps) {
   const [inputData, setInputData]   = useState<TimeseriesPoint[]>([])
   const [outputData, setOutputData] = useState<TimeseriesPoint[]>([])
 
@@ -49,7 +50,7 @@ export function TokensChart({ timeRange, sseVersion }: TokensChartProps) {
 
   if (data.length === 0) {
     return (
-      <div className="bg-bg-card border border-bg-border rounded-lg p-6 flex items-center justify-center h-48">
+      <div className={`bg-bg-card border border-bg-border rounded-lg p-6 flex items-center justify-center ${compact ? 'h-full min-h-[180px]' : 'h-48'}`}>
         <span className="text-text-muted text-sm">Sin datos de tokens</span>
       </div>
     )
@@ -58,7 +59,7 @@ export function TokensChart({ timeRange, sseVersion }: TokensChartProps) {
   return (
     <div className="bg-bg-card border border-bg-border rounded-lg p-4">
       <h3 className="text-sm font-medium text-text-secondary mb-4">Tokens por período</h3>
-      <ResponsiveContainer width="100%" height={220}>
+      <ResponsiveContainer width="100%" height={compact ? 140 : 220}>
         <AreaChart data={data} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
           <defs>
             <linearGradient id="colorInput" x1="0" y1="0" x2="0" y2="1">
@@ -88,7 +89,7 @@ export function TokensChart({ timeRange, sseVersion }: TokensChartProps) {
             labelStyle={{ color: CHART_TEXT, fontSize: 12 }}
             itemStyle={{ fontSize: 12 }}
           />
-          <Legend wrapperStyle={{ fontSize: 12, color: CHART_TEXT }} />
+          {!compact && <Legend wrapperStyle={{ fontSize: 12, color: CHART_TEXT }} />}
           <Area
             type="monotone"
             dataKey="input"
