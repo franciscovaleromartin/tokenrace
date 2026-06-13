@@ -86,6 +86,19 @@ export function CostChart({ timeRange, sseVersion, compact = false }: CostChartP
           ))}
         </BarChart>
       </ResponsiveContainer>
+      {compact && (
+        <div className="flex flex-wrap gap-x-3 gap-y-1 mt-2">
+          {projects.map((proj, i) => (
+            <div key={proj} className="flex items-center gap-1.5">
+              <span
+                className="w-2 h-2 rounded-sm shrink-0"
+                style={{ backgroundColor: PROJECT_COLORS[i % PROJECT_COLORS.length] }}
+              />
+              <span className="text-xs text-text-muted truncate">{proj}</span>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
