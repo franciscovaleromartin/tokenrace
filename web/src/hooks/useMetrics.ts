@@ -37,12 +37,12 @@ export function useMetrics(timeRange: TimeRange) {
   const handleSSE = useCallback((_type: string, _payload: unknown) => {
     if (Date.now() - lastFetchRef.current > 5_000) {
       fetchData()
-    } else {
-      api.status().then(setStatus).catch(() => {})
     }
+    // Sin else: status se actualiza dentro de fetchData cada 5s.
+    // Evitar un fetch+setStatus por cada evento SSE (puede ser sub-segundo).
 
     const now = Date.now()
-    if (now - lastSseVersionRef.current > 5_000) {
+    if (now - lastSseVersionRef.current > 10_000) {
       lastSseVersionRef.current = now
       setSseVersion(v => v + 1)
     }

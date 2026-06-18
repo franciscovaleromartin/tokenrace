@@ -32,12 +32,12 @@ export function CostChart({ timeRange, sseVersion, compact = false }: CostChartP
     return Array.from(set).sort()
   }, [data])
 
-  const chartData = data.map(p => ({
+  const chartData = useMemo(() => data.map(p => ({
     label: formatDay(p.timestamp),
     ...Object.fromEntries(
       projects.map(proj => [proj, Number((p.projects[proj] ?? 0).toFixed(4))])
     ),
-  }))
+  })), [data, projects])
 
   if (chartData.length === 0) {
     return (

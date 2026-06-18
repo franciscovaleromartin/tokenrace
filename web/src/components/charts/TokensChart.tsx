@@ -3,7 +3,7 @@ import {
   Legend, ResponsiveContainer
 } from 'recharts'
 import { api } from '../../api'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import type { TimeRange, TimeseriesPoint } from '../../types'
 import { CHART_GRID, CHART_TEXT, CHART_TICK, CHART_TOOLTIP_STYLE, COLOR_INPUT, COLOR_OUTPUT } from '../../utils/chartTheme'
 
@@ -33,20 +33,20 @@ export function TokensChart({ timeRange, sseVersion, compact = false }: TokensCh
     }).catch(() => {})
   }, [timeRange, sseVersion])
 
-  // Combinar timestamps
-  const tsSet = new Set([
-    ...inputData.map(p => p.timestamp),
-    ...outputData.map(p => p.timestamp)
-  ])
-  const inputMap  = new Map(inputData.map(p  => [p.timestamp, p.value]))
-  const outputMap = new Map(outputData.map(p => [p.timestamp, p.value]))
-
-  const data = Array.from(tsSet).sort().map(ts => ({
-    ts,
-    label: formatLabel(ts),
-    input:  inputMap.get(ts)  ?? 0,
-    output: outputMap.get(ts) ?? 0,
-  }))
+  const data = useMemo(() => {
+    const tsSet = new Set([
+      ...inputData.map(p => p.timestamp),
+      ...outputData.map(p => p.timestamp),
+    ])
+    const inputMap  = new Map(inputData.map(p  => [p.timestamp, p.value]))
+    const outputMap = new Map(outputData.map(p => [p.timestamp, p.value]))
+    return Array.from(tsSet).sort().map(ts => ({
+      ts,
+      label: formatLabel(ts),
+      input:  inputMap.get(ts)  ?? 0,
+      output: outputMap.get(ts) ?? 0,
+    }))
+  }, [inputData, outputData])
 
   if (data.length === 0) {
     return (
