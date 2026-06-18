@@ -204,6 +204,7 @@ export function createRouter({ port = 1337 } = {}) {
   /** POST /api/board — persiste el estado de la pizarra Excalidraw */
   router.post('/api/board', requireSafeOrigin, (req, res) => {
     setBoard(req.body)
+    broadcast('board_updated', {})
     res.json({ ok: true })
   })
 
