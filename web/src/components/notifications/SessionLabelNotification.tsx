@@ -1,11 +1,11 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Check, X } from 'lucide-react'
 import { api } from '../../api'
-import { useSSE } from '../../hooks/useSSE'
 import type { UnlabeledSession } from '../../types'
 
 interface SessionLabelNotificationProps {
-  onLabeled: () => void   // callback para refrescar datos cuando se etiqueta
+  onLabeled: () => void
+  sseVersion: number
 }
 
 interface NotifState {
@@ -21,7 +21,7 @@ function timeSince(ts: number): string {
   return `hace ${Math.floor(diff / 3_600_000)}h`
 }
 
-export function SessionLabelNotification({ onLabeled }: SessionLabelNotificationProps) {
+export function SessionLabelNotification({ onLabeled, sseVersion }: SessionLabelNotificationProps) {
   const [notifs, setNotifs] = useState<NotifState[]>([])
   const [knownProjects, setKnownProjects] = useState<string[]>([])
   const [customInputs, setCustomInputs] = useState<Record<string, string>>({})
@@ -57,19 +57,7 @@ export function SessionLabelNotification({ onLabeled }: SessionLabelNotification
 
   useEffect(() => {
     load()
-    const interval = setInterval(load, 10_000) // refrescar cada 10s
-    return () => clearInterval(interval)
-  }, [load])
-
-  // Eliminar inmediatamente cuando el servidor confirma una sesión etiquetada
-  useSSE(useCallback((type, payload) => {
-    if (type === 'label_updated') {
-      const { sessionId } = payload as { sessionId: string }
-      setNotifs(prev => prev.filter(n =>
-        n.session.sessionId !== sessionId || n.status !== 'pending'
-      ))
-    }
-  }, []))
+  }, [load, sseVersion])
 
   async function labelSession(sessionId: string, project: string) {
     await api.labelSession(sessionId, project).catch(() => {})

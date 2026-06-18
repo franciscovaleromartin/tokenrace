@@ -194,7 +194,7 @@ export default function App() {
         />
 
         {/* Zona de notificaciones — solo aparece si hay sesiones sin etiquetar */}
-        <SessionLabelNotification onLabeled={refetch} />
+        <SessionLabelNotification onLabeled={refetch} sseVersion={sseVersion} />
 
         {activeTab === 'board' ? (
           <Suspense fallback={null}>
@@ -232,7 +232,7 @@ export default function App() {
           </div>
         )}
 
-        {activeTab === 'sessions' && <SessionsTable timeRange={timeRange} sseVersion={sseVersion} />}
+        {activeTab === 'sessions' && <SessionsTable timeRange={timeRange} sseVersion={sseVersion} knownProjects={knownProjects} />}
         {activeTab === 'projects' && <ProjectsTable timeRange={timeRange} sseVersion={sseVersion} />}
         {activeTab === 'tools'    && <ToolsTable timeRange={timeRange} sseVersion={sseVersion} />}
         {activeTab === 'agents'   && <AgentsList sseVersion={sseVersion} />}

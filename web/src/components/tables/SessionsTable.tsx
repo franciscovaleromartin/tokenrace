@@ -9,25 +9,21 @@ import type { Session, Event, TimeRange } from '../../types'
 interface SessionsTableProps {
   timeRange: TimeRange
   sseVersion: number
+  knownProjects: string[]
 }
 
-export function SessionsTable({ timeRange, sseVersion }: SessionsTableProps) {
+export function SessionsTable({ timeRange, sseVersion, knownProjects }: SessionsTableProps) {
   const [sessions, setSessions] = useState<Session[]>([])
   const [expanded, setExpanded] = useState<string | null>(null)
   const [sessionEvents, setSessionEvents] = useState<Event[]>([])
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editValue, setEditValue] = useState('')
   const [projectFilter, setProjectFilter] = useState('')
-  const [knownProjects, setKnownProjects] = useState<string[]>([])
   const { sorted, toggle, indicator } = useSort(sessions, 'startTime')
 
   useEffect(() => {
     api.sessions(50, projectFilter || undefined).then(setSessions).catch(() => {})
   }, [timeRange, sseVersion, projectFilter])
-
-  useEffect(() => {
-    api.projects(timeRange).then(ps => setKnownProjects(ps.map(p => p.project))).catch(() => {})
-  }, [timeRange, sseVersion])
 
   function toggleExpand(sessionId: string) {
     if (expanded === sessionId) {

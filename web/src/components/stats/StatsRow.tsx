@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { StatCard } from './StatCard'
 import { formatNumber, formatCost, formatDuration } from '../../utils/format'
 import { api } from '../../api'
@@ -43,6 +43,7 @@ function pctChange(prev: number, cur: number): number | undefined {
 
 export function StatsRow({ summary, selectedProjectData, timeRange, sseVersion, onNavigate }: StatsRowProps) {
   const [trends, setTrends] = useState<Trends>({})
+  const lastTrendsRef = useRef<{ ts: number; range: string }>({ ts: 0, range: '' })
 
   useEffect(() => {
     const win = PREV_WINDOW[timeRange]
@@ -50,7 +51,12 @@ export function StatsRow({ summary, selectedProjectData, timeRange, sseVersion, 
       setTrends({})
       return
     }
-    const boundary = Date.now() - win.ms
+    const now = Date.now()
+    const last = lastTrendsRef.current
+    if (last.range === timeRange && now - last.ts < 60_000) return
+    lastTrendsRef.current = { ts: now, range: timeRange }
+
+    const boundary = now - win.ms
     Promise.all([
       api.timeseries('claude_code.tokens.input',  win.from, win.bucket),
       api.timeseries('claude_code.tokens.output', win.from, win.bucket),
