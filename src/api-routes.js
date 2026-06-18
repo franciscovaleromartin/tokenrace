@@ -14,7 +14,8 @@ import {
   getStatus, getSummary, getTimeseries, getTimeseriesByProject, getProjects,
   getSessions, getUnlabeledSessions, getSessionEvents,
   getEvents, getTools, getAgents, getModels,
-  labelSession, ignoreSession, reset, resetProject
+  labelSession, ignoreSession, reset, resetProject,
+  getBoard, setBoard
 } from './store.js'
 
 // ─── Clientes SSE activos ────────────────────────────────────────────────────
@@ -190,6 +191,19 @@ export function createRouter({ port = 1337 } = {}) {
    */
   router.post('/api/sessions/:sessionId/ignore', requireSafeOrigin, (req, res) => {
     ignoreSession(req.params.sessionId)
+    res.json({ ok: true })
+  })
+
+  /** GET /api/board — devuelve el estado guardado de la pizarra Excalidraw */
+  router.get('/api/board', (req, res) => {
+    const data = getBoard()
+    if (!data) return res.status(404).json(null)
+    res.json(data)
+  })
+
+  /** POST /api/board — persiste el estado de la pizarra Excalidraw */
+  router.post('/api/board', requireSafeOrigin, (req, res) => {
+    setBoard(req.body)
     res.json({ ok: true })
   })
 

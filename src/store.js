@@ -1119,3 +1119,27 @@ export function loadFromDisk() {
 export function startAutoSave() {
   return setInterval(saveSync, 60_000)
 }
+
+// ─── Board (pizarra Excalidraw) ──────────────────────────────────────────────
+
+const boardFile = path.join(HOME_DATA_DIR, 'board.json')
+
+/** Devuelve el contenido actual de la pizarra, o null si no existe. */
+export function getBoard() {
+  try {
+    const raw = fs.readFileSync(boardFile, 'utf8')
+    return JSON.parse(raw)
+  } catch {
+    return null
+  }
+}
+
+/** Persiste el contenido de la pizarra en disco. */
+export function setBoard(data) {
+  try {
+    fs.mkdirSync(HOME_DATA_DIR, { recursive: true, mode: 0o700 })
+    fs.writeFileSync(boardFile, JSON.stringify(data), { mode: 0o600 })
+  } catch (err) {
+    console.error('[store] Error guardando board:', err.message)
+  }
+}
