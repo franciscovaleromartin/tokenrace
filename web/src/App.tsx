@@ -139,12 +139,19 @@ export default function App() {
     }).catch(() => {})
   }, [sseVersion, timeRange])
 
-  // Título de pestaña con el coste del día, independiente del rango seleccionado
+  // Título de pestaña con el coste del día.
+  // Si el rango seleccionado ya es 'now-24h', reutilizamos el summary existente
+  // (sin fetch extra). Solo hacemos fetch independiente en otros rangos.
   useEffect(() => {
+    if (timeRange === 'now-24h') {
+      if (!summary) return
+      document.title = summary.cost > 0 ? `${formatCost(summary.cost)} hoy · tokenrace` : 'tokenrace'
+      return
+    }
     api.summary('now-24h')
       .then(s => { document.title = s.cost > 0 ? `${formatCost(s.cost)} hoy · tokenrace` : 'tokenrace' })
       .catch(() => {})
-  }, [sseVersion])
+  }, [sseVersion, timeRange, summary])
 
   const handleReset = useCallback(async () => {
     await api.reset()
@@ -218,7 +225,7 @@ export default function App() {
               <CostChart compact timeRange={timeRange} sseVersion={sseVersion} />
               {summary && <CacheSavingsPanel summary={summary} />}
               <RecentSessionsPanel sseVersion={sseVersion} onViewAll={() => setActiveTab('sessions')} />
-              <TopProjectsPanel timeRange={timeRange} sseVersion={sseVersion} onViewAll={() => setActiveTab('projects')} />
+              <TopProjectsPanel projects={projectsData} onViewAll={() => setActiveTab('projects')} />
               <RecentEventsPanel sseVersion={sseVersion} onViewAll={() => setActiveTab('events')} />
             </div>
             <ActivityHeatmap sseVersion={sseVersion} />

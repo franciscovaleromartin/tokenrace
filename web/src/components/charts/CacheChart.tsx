@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import { api } from '../../api'
 import type { TimeRange, TimeseriesPoint } from '../../types'
@@ -16,14 +16,16 @@ export function CacheChart({ timeRange, sseVersion }: { timeRange: TimeRange; ss
     ]).then(([read, create]) => { setReadData(read); setCreateData(create) }).catch(() => {})
   }, [timeRange, sseVersion])
 
-  const tsSet = new Set([...readData.map(p => p.timestamp), ...createData.map(p => p.timestamp)])
-  const readMap   = new Map(readData.map(p   => [p.timestamp, p.value]))
-  const createMap = new Map(createData.map(p => [p.timestamp, p.value]))
-  const data = Array.from(tsSet).sort().map(ts => ({
-    label: new Date(ts).toLocaleString('es', { hour: '2-digit', day: 'numeric', month: 'short' }),
-    read:   readMap.get(ts)   ?? 0,
-    create: createMap.get(ts) ?? 0,
-  }))
+  const data = useMemo(() => {
+    const tsSet   = new Set([...readData.map(p => p.timestamp), ...createData.map(p => p.timestamp)])
+    const readMap   = new Map(readData.map(p   => [p.timestamp, p.value]))
+    const createMap = new Map(createData.map(p => [p.timestamp, p.value]))
+    return Array.from(tsSet).sort().map(ts => ({
+      label: new Date(ts).toLocaleString('es', { hour: '2-digit', day: 'numeric', month: 'short' }),
+      read:   readMap.get(ts)   ?? 0,
+      create: createMap.get(ts) ?? 0,
+    }))
+  }, [readData, createData])
 
   if (data.length === 0) {
     return (

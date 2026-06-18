@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { api } from '../../api'
 import { formatNumber, formatCost } from '../../utils/format'
 import type { TimeseriesPoint } from '../../types'
@@ -34,6 +34,9 @@ export function ActivityHeatmap({ sseVersion }: ActivityHeatmapProps) {
   const [days, setDays] = useState<Map<number, DayData>>(new Map())
   const [tooltip, setTooltip] = useState<TooltipData | null>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
+  // Throttle: el heatmap es datos históricos acumulados; no necesita
+  // refrescarse más de 1 vez/minuto aunque sseVersion suba más a menudo.
+  const lastHeatmapRef = useRef<number>(0)
 
   // Mostrar lo más reciente por defecto: scroll al extremo derecho
   useEffect(() => {
@@ -41,7 +44,7 @@ export function ActivityHeatmap({ sseVersion }: ActivityHeatmapProps) {
     if (el) el.scrollLeft = el.scrollWidth
   }, [days])
 
-  useEffect(() => {
+  const fetchHeatmap = useCallback(() => {
     Promise.all([
       api.timeseries('claude_code.tokens.input',  'now-365d', '1d'),
       api.timeseries('claude_code.tokens.output', 'now-365d', '1d'),
@@ -61,7 +64,13 @@ export function ActivityHeatmap({ sseVersion }: ActivityHeatmapProps) {
       add(cost, 'cost')
       setDays(map)
     }).catch(() => {})
-  }, [sseVersion])
+  }, [])
+
+  useEffect(() => {
+    if (Date.now() - lastHeatmapRef.current < 60_000) return
+    lastHeatmapRef.current = Date.now()
+    fetchHeatmap()
+  }, [sseVersion, fetchHeatmap])
 
   const values = [...days.values()]
   if (!values.some(d => d.tokens > 0)) {

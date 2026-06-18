@@ -1,8 +1,13 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 
 type SSEHandler = (type: string, payload: unknown) => void
 
 export function useSSE(onEvent: SSEHandler) {
+  // Ref para que el EventSource (creado una sola vez) siempre llame
+  // al handler más reciente sin necesitar reconectarse.
+  const onEventRef = useRef(onEvent)
+  onEventRef.current = onEvent
+
   useEffect(() => {
     let es: EventSource | null = null
     let retryTimeout: ReturnType<typeof setTimeout>
@@ -13,7 +18,7 @@ export function useSSE(onEvent: SSEHandler) {
       es.onmessage = (e) => {
         try {
           const { type, payload } = JSON.parse(e.data)
-          if (type !== 'ping') onEvent(type, payload)
+          if (type !== 'ping') onEventRef.current(type, payload)
         } catch {
           // ignorar mensajes mal formados
         }

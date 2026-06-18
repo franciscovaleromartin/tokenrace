@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ReferenceLine, ResponsiveContainer } from 'recharts'
 import { api } from '../../api'
 import type { TimeRange, TimeseriesPoint } from '../../types'
@@ -16,17 +16,19 @@ export function EfficiencyChart({ timeRange, sseVersion }: { timeRange: TimeRang
     ]).then(([input, output]) => { setInputData(input); setOutputData(output) }).catch(() => {})
   }, [timeRange, sseVersion])
 
-  const tsSet    = new Set([...inputData.map(p => p.timestamp), ...outputData.map(p => p.timestamp)])
-  const inputMap  = new Map(inputData.map(p  => [p.timestamp, p.value]))
-  const outputMap = new Map(outputData.map(p => [p.timestamp, p.value]))
-  const data = Array.from(tsSet).sort().map(ts => {
-    const inp = inputMap.get(ts) ?? 0
-    const out = outputMap.get(ts) ?? 0
-    return {
-      label: new Date(ts).toLocaleString('es', { hour: '2-digit', day: 'numeric', month: 'short' }),
-      efficiency: inp > 0 ? Number((out / inp).toFixed(3)) : 0,
-    }
-  })
+  const data = useMemo(() => {
+    const tsSet    = new Set([...inputData.map(p => p.timestamp), ...outputData.map(p => p.timestamp)])
+    const inputMap  = new Map(inputData.map(p  => [p.timestamp, p.value]))
+    const outputMap = new Map(outputData.map(p => [p.timestamp, p.value]))
+    return Array.from(tsSet).sort().map(ts => {
+      const inp = inputMap.get(ts) ?? 0
+      const out = outputMap.get(ts) ?? 0
+      return {
+        label: new Date(ts).toLocaleString('es', { hour: '2-digit', day: 'numeric', month: 'short' }),
+        efficiency: inp > 0 ? Number((out / inp).toFixed(3)) : 0,
+      }
+    })
+  }, [inputData, outputData])
 
   if (data.length === 0) {
     return (
