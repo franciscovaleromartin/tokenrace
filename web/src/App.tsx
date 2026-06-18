@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, lazy, Suspense } from 'react'
 import { Header } from './components/layout/Header'
 import { Sidebar } from './components/layout/Sidebar'
 import { SetupGuide } from './components/setup/SetupGuide'
@@ -27,6 +27,8 @@ import { formatCost, formatNumber } from './utils/format'
 import { estimateCacheSavings } from './utils/prices'
 import type { TabId, Project } from './types'
 
+const BoardPanel = lazy(() => import('./components/board/Board').then(m => ({ default: m.Board })))
+
 const SECTION_TITLES: Record<TabId, string> = {
   overview: 'Overview',
   sessions: 'Sessions',
@@ -36,6 +38,7 @@ const SECTION_TITLES: Record<TabId, string> = {
   models:   'Models',
   events:   'Events',
   costs:    'Costs',
+  board:    'Board',
 }
 
 interface ProjectSelectorProps {
@@ -186,6 +189,11 @@ export default function App() {
         {/* Zona de notificaciones — solo aparece si hay sesiones sin etiquetar */}
         <SessionLabelNotification onLabeled={refetch} />
 
+        {activeTab === 'board' ? (
+          <Suspense fallback={null}>
+            <BoardPanel />
+          </Suspense>
+        ) : (
         <main className="flex-1 p-4 max-w-screen-2xl mx-auto w-full">
 
         {activeTab === 'overview' && (
@@ -254,6 +262,7 @@ export default function App() {
         )}
 
         </main>
+        )}
       </div>
     </div>
   )

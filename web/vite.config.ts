@@ -40,6 +40,9 @@ export default defineConfig({
       '/v1':  'http://localhost:1337'
     }
   },
+  optimizeDeps: {
+    include: ['@excalidraw/excalidraw'],
+  },
   build: {
     outDir: '../dist',
     emptyOutDir: true,

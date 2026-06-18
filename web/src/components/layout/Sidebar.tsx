@@ -1,4 +1,4 @@
-import { LayoutDashboard, List, FolderGit2, Wrench, Bot, Cpu, Zap, DollarSign } from 'lucide-react'
+import { LayoutDashboard, List, FolderGit2, Wrench, Bot, Cpu, Zap, DollarSign, PenLine } from 'lucide-react'
 import type { TabId } from '../../types'
 
 const NAV: { id: TabId; label: string; Icon: typeof LayoutDashboard }[] = [
@@ -10,6 +10,7 @@ const NAV: { id: TabId; label: string; Icon: typeof LayoutDashboard }[] = [
   { id: 'models',   label: 'Models',   Icon: Cpu },
   { id: 'events',   label: 'Events',   Icon: Zap },
   { id: 'costs',    label: 'Costs',    Icon: DollarSign },
+  { id: 'board',    label: 'Board',    Icon: PenLine },
 ]
 
 interface SidebarProps {
